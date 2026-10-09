@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Rokkha web
 
-## Getting Started
+Next.js frontend for Rokkha. Live at **https://rokkha.vercel.app** (deployed by Vercel on every
+push to `main`; pull requests get preview deployments).
 
-First, run the development server:
+## Run locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+It talks to the API at `NEXT_PUBLIC_API_URL` (default `http://localhost:8000/api/v1`; see
+`.env.example`). Start the API from the repo root with `docker compose up -d` and seed it with
+`docker compose exec api python -m scripts.seed`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Checks
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint       # ESLint, including the React Compiler rules
+npm run build      # type-check + production build
+```
 
-## Learn More
+## Layout
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/app/            routes: landing, login/register, citizen, officer, admin
+src/components/     UI by area (citizen, officer, admin, gd, incident, map, ui)
+src/lib/            API client + token refresh, auth, i18n (en/bn), queries, realtime feed
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Notes:
+- Pages prerender as static HTML; session and language live in the browser, so nothing reads
+  cookies on the server.
+- Live incident updates come over the API's WebSocket and are merged into the React Query cache.
+- Maps use MapLibre with OpenFreeMap tiles (free, no key).
