@@ -12,11 +12,6 @@ API docs: [rokkha-api.onrender.com/docs](https://rokkha-api.onrender.com/docs)
 
 > Free hosting: the API sleeps after 15 minutes idle and can take up to a minute to wake.
 
-**Backend:** FastAPI · SQLAlchemy 2.0 (async) · Alembic · PostgreSQL 16 · Redis · ARQ ·
-WebSockets · pytest · Docker · GitHub Actions
-**Frontend:** Next.js 16 · TypeScript · Tailwind CSS v4 · TanStack Query · MapLibre (OpenFreeMap) ·
-English / বাংলা
-
 ## The problem
 
 Emergency calls are still routed by hand: someone answers, works out which station is
@@ -37,6 +32,17 @@ humans for review.
 | **Online GD** | Numbers like `DHA-GUL-2026-000001` (per station, per year, no duplicates under concurrency); `submitted → under_review → approved/rejected` |
 | **AI draft** | `POST /gds/ai-draft` turns a Bangla or English complaint into a suggested GD (Groq free tier or Anthropic, JSON output), validated and never saved |
 | **Ops** | Dashboard stats, SOS rate limit (429), health checks, consistent error JSON, Docker, CI |
+
+## Tech stack
+
+| Layer | Tools |
+|---|---|
+| **API** | Python · FastAPI · Pydantic v2 · Uvicorn |
+| **Data** | PostgreSQL 16 · SQLAlchemy 2.0 (async) · Alembic migrations |
+| **Realtime & jobs** | Redis (pub/sub, rate limits) · ARQ worker · WebSockets |
+| **Auth & AI** | JWT access/refresh with rotation · bcrypt · Groq / Anthropic LLM API |
+| **Frontend** | Next.js 16 · React 19 · TypeScript · Tailwind CSS v4 · TanStack Query · MapLibre (OpenFreeMap) · English / বাংলা |
+| **Quality & ops** | pytest · Docker Compose · GitHub Actions · Render (API) · Vercel (web) |
 
 ## Screenshots
 
