@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.station import Station
 from app.repositories.base import paginate
 from app.schemas.common import PageParams
+from app.services.geo import haversine_km
 
 
 class StationRepository:
@@ -29,6 +30,15 @@ class StationRepository:
         if city:
             stmt = stmt.where(func.lower(Station.city) == city.lower())
         return await paginate(self.session, stmt, params)
+
+    async def nearest(self, lat: float, lng: float) -> Station | None:
+        """Jurisdiction of a location = the nearest station (BR Incidents-creation 2)."""
+        stmt = (
+            select(Station)
+            .order_by(haversine_km(Station.lat, Station.lng, lat, lng), Station.id)
+            .limit(1)
+        )
+        return await self.session.scalar(stmt)
 
     def add(self, station: Station) -> None:
         self.session.add(station)

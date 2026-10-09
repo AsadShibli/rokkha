@@ -3,7 +3,7 @@ import re
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import ConflictError
+from app.core.exceptions import ActiveSosExistsError, AppError, ConflictError
 
 _CONSTRAINT_IN_MESSAGE = re.compile(r'constraint "([^"]+)"')
 
@@ -14,6 +14,11 @@ UNIQUE_FIELDS = {
     "uq_stations_code": "code",
     "uq_stations_city_name": "name",
     "uq_officers_badge_no": "badge_no",
+}
+
+# Constraints that encode a business rule rather than a duplicate field.
+RULE_ERRORS: dict[str, type[AppError]] = {
+    "uq_incidents_open_sos_per_citizen": ActiveSosExistsError,
 }
 
 
@@ -32,17 +37,35 @@ def taken(field: str) -> dict[str, str]:
     return {"field": field, "message": f"This {field} is already in use"}
 
 
-async def commit_or_conflict(session: AsyncSession) -> None:
-    """Commit; turn a unique-constraint violation into 409 CONFLICT naming the field.
+def _mapped_error(exc: IntegrityError) -> AppError | None:
+    name = constraint_name(exc) or ""
+    if name in RULE_ERRORS:
+        return RULE_ERRORS[name]()
+    if name in UNIQUE_FIELDS:
+        return ConflictError(details=[taken(UNIQUE_FIELDS[name])])
+    return None
 
-    Services pre-check uniqueness for a friendly error, but two requests can race past that
-    check. The database constraint is the real guarantee; this maps its error back to the API.
-    """
+
+async def _write_or_conflict(session: AsyncSession, *, commit: bool) -> None:
     try:
-        await session.commit()
+        await (session.commit() if commit else session.flush())
     except IntegrityError as exc:
         await session.rollback()
-        field = UNIQUE_FIELDS.get(constraint_name(exc) or "")
-        if field is None:
+        error = _mapped_error(exc)
+        if error is None:
             raise
-        raise ConflictError(details=[taken(field)]) from exc
+        raise error from exc
+
+
+async def commit_or_conflict(session: AsyncSession) -> None:
+    """Commit; turn a known constraint violation into the matching 409.
+
+    Services pre-check rules for a friendly error, but two requests can race past that check.
+    The database constraint is the real guarantee; this maps its error back to the API.
+    """
+    await _write_or_conflict(session, commit=True)
+
+
+async def flush_or_conflict(session: AsyncSession) -> None:
+    """Same as commit_or_conflict, for when the INSERT must hit the DB mid-transaction."""
+    await _write_or_conflict(session, commit=False)

@@ -65,6 +65,30 @@ class ConflictError(AppError):
     message = "Resource already exists."
 
 
+class InvalidTransitionError(AppError):
+    status_code = status.HTTP_409_CONFLICT
+    code = "INVALID_TRANSITION"
+    message = "This status change is not allowed from the current status."
+
+
+class ActiveSosExistsError(AppError):
+    status_code = status.HTTP_409_CONFLICT
+    code = "ACTIVE_SOS_EXISTS"
+    message = "You already have an open SOS."
+
+
+class OfficerUnavailableError(AppError):
+    status_code = status.HTTP_409_CONFLICT
+    code = "OFFICER_UNAVAILABLE"
+    message = "That officer can't take this incident (unreachable, other station, or same officer)."
+
+
+class NoStationError(AppError):
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    code = "NO_STATION"
+    message = "No station is configured to take this incident."
+
+
 class OfficerBusyError(AppError):
     status_code = status.HTTP_409_CONFLICT
     code = "OFFICER_BUSY"
