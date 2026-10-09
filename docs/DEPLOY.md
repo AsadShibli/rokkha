@@ -25,8 +25,9 @@ The same image runs the ARQ worker with `arq app.workers.main.WorkerSettings`.
 The Next.js app lives in `web/` and is deployed as its own Vercel project.
 
 - Dashboard: **New Project → import the repo → Root Directory `web`**, then add
-  `NEXT_PUBLIC_API_URL=https://<your-api>/api/v1`. (The Vercel account needs a GitHub login
-  connection for Git imports and automatic deploys on every push.)
+  `NEXT_PUBLIC_API_URL=https://<your-api>/api/v1`. The Vercel account needs a GitHub login
+  connection for Git imports. Once connected, every push to `main` deploys production and every
+  pull request gets a preview.
 - Or from the CLI, in `web/`: `npx vercel link`, `npx vercel env add NEXT_PUBLIC_API_URL production`,
   `npx vercel deploy --prod`.
 - Then allow the frontend origin on the API: set `CORS_ORIGINS=https://<your-app>.vercel.app`
