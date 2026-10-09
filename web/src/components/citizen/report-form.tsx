@@ -9,7 +9,8 @@ import { useId, useState } from "react";
 import { AppShell } from "@/components/app/app-shell";
 import { Button } from "@/components/ui/button";
 import { api, ApiError } from "@/lib/api";
-import { currentLocation } from "@/lib/geo";
+import { LocationCard } from "@/components/location/location-card";
+import { useGeolocation, useResolvePoint } from "@/lib/geo";
 import { useI18n } from "@/lib/i18n";
 import type { IncidentDetail } from "@/lib/incidents";
 
@@ -22,6 +23,8 @@ function ReportForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const textId = useId();
+  const geo = useGeolocation();
+  const resolvePoint = useResolvePoint(geo);
   const [text, setText] = useState("");
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -32,8 +35,8 @@ function ReportForm() {
     setPending(true);
     setError(null);
     try {
-      const where = await currentLocation();
-      if (where.demo) setNotice(t.citizen.demoLocation);
+      const where = await resolvePoint();
+      if (where.source !== "device") setNotice(t.location.usedDemo[where.source]);
       const incident = await api.post<IncidentDetail>("/incidents/report", {
         lat: where.lat,
         lng: where.lng,
@@ -56,7 +59,11 @@ function ReportForm() {
       <h1 className="mt-5 text-3xl font-bold tracking-tight">{t.citizen.reportTitle}</h1>
       <p className="mt-2 text-muted">{t.citizen.reportSubtitle}</p>
 
-      <form onSubmit={submit} className="mt-8 flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-card">
+      <div className="mt-8">
+        <LocationCard geo={geo} />
+      </div>
+
+      <form onSubmit={submit} className="mt-4 flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-card">
         <label htmlFor={textId} className="text-sm font-medium text-ink-soft">
           {t.citizen.reportLabel}
         </label>

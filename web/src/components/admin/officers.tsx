@@ -54,7 +54,7 @@ function Officers({ user }: { user: User }) {
                 <th className="px-4 py-3 font-semibold">{t.register.name}</th>
                 <th className="hidden px-4 py-3 font-semibold sm:table-cell">{t.admin.badgeNo}</th>
                 <th className="px-4 py-3 font-semibold">{t.officer.onDuty}</th>
-                <th className="hidden px-4 py-3 font-semibold md:table-cell">{t.officer.sharing}</th>
+                <th className="hidden px-4 py-3 font-semibold md:table-cell">{t.admin.lastSeen}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
