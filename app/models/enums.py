@@ -37,3 +37,19 @@ OPEN_INCIDENT_STATUSES = (
     IncidentStatus.ASSIGNED,
     IncidentStatus.EN_ROUTE,
 )
+
+
+class GdCategory(StrEnum):
+    LOST_ITEM = "lost_item"
+    LOST_DOCUMENT = "lost_document"
+    MISSING_PERSON = "missing_person"
+    THREAT = "threat"
+    HARASSMENT = "harassment"
+    OTHER = "other"
+
+
+class GdStatus(StrEnum):
+    SUBMITTED = "submitted"
+    UNDER_REVIEW = "under_review"
+    APPROVED = "approved"
+    REJECTED = "rejected"

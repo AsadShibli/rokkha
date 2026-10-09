@@ -65,6 +65,14 @@ class ConflictError(AppError):
     message = "Resource already exists."
 
 
+class ValidationFailedError(AppError):
+    """422 raised by a service (e.g. a referenced row does not exist)."""
+
+    status_code = status.HTTP_422_UNPROCESSABLE_CONTENT
+    code = "VALIDATION_ERROR"
+    message = "Some fields are invalid."
+
+
 class InvalidTransitionError(AppError):
     status_code = status.HTTP_409_CONFLICT
     code = "INVALID_TRANSITION"
