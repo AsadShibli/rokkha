@@ -1,6 +1,6 @@
 """Insert rows directly for test setup, so each test only exercises the endpoint it is about."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from itertools import count
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -62,6 +62,9 @@ async def make_officer(
     station: Station,
     duty_status: DutyStatus = DutyStatus.OFF_DUTY,
     located: bool = False,
+    lat: float = 24.9,
+    lng: float = 91.87,
+    seen_minutes_ago: float = 0,
 ) -> Officer:
     user = await make_user(db, UserRole.OFFICER)
     officer = Officer(
@@ -70,9 +73,9 @@ async def make_officer(
         badge_no=f"B-{user.id}",
         rank="Constable",
         duty_status=duty_status,
-        last_lat=24.9 if located else None,
-        last_lng=91.87 if located else None,
-        last_seen_at=datetime.now(UTC) if located else None,
+        last_lat=lat if located else None,
+        last_lng=lng if located else None,
+        last_seen_at=(datetime.now(UTC) - timedelta(minutes=seen_minutes_ago) if located else None),
     )
     db.add(officer)
     await db.flush()

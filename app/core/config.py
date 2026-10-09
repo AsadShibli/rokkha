@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     access_token_minutes: int = 15
     refresh_token_days: int = 7
 
+    # An available officer counts as reachable only if seen this recently (BR Officers 8).
+    officer_reachable_minutes: int = 10
+
     @model_validator(mode="after")
     def real_secret_outside_local(self) -> "Settings":
         if self.app_env not in {"local", "test"} and self.jwt_secret == DEV_JWT_SECRET:
