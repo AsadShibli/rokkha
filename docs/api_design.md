@@ -104,7 +104,8 @@ Responses reuse these shapes so each endpoint below only names them.
 
 **Who:** public
 
-**Input:** `name` (2-100), `phone` (`+8801XXXXXXXXX`), `email` (optional), `password` (≥ 8).
+**Input:** `name` (2-100, trimmed), `phone` (`+8801XXXXXXXXX`), `email` (optional), `password`
+(8 characters to 72 bytes; bcrypt ignores anything past 72 bytes, and a Bangla letter is 3 bytes).
 
 **Must do:**
 - validate input; lowercase the email
