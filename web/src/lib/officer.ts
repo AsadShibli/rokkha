@@ -1,10 +1,11 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api } from "./api";
-import { DEMO_POINT, inBangladesh, type Point } from "./geo";
+import { distanceKm } from "./format";
+import { DEMO_POINT, type Point, useGeolocation } from "./geo";
 import type { User } from "./types";
 
 export type DutyStatus = "off_duty" | "available" | "busy";
@@ -37,72 +38,71 @@ export function useSetDuty() {
   });
 }
 
-const SEND_EVERY_MS = 10_000;
-const DEMO_SEND_EVERY_MS = 30_000;
+const SEND_EVERY_MS = 10_000; // while moving: at most this often...
+const MOVED_KM = 0.025; // ...or immediately after moving 25 m
+const KEEPALIVE_MS = 30_000; // standing still: re-send so the officer stays "reachable"
 
 /**
- * While `enabled`, stream the device position to PATCH /officers/me/location (at most every
- * 10 s). If the browser can't give a Bangladeshi position (desktop demo), re-send the last known
- * point every 30 s instead, so the officer stays "reachable" (seen in the last 10 minutes).
+ * While `enabled` (on duty), share the device position with PATCH /officers/me/location,
+ * automatically, with nothing to click: right away, after every 25 m moved (at most every
+ * 10 s), and every 30 s while standing still, which keeps the officer inside the 10-minute
+ * "reachable" window.
+ *
+ * Without a usable Bangladeshi fix (blocked, no signal, or a reviewer abroad) it keeps the last
+ * known position fresh instead, and `geo.status` says why, so the screen can tell the officer.
  */
 export function useLocationSharing(enabled: boolean, lastLat: number | null, lastLng: number | null) {
-  const [lastSent, setLastSent] = useState<Date | null>(null);
-  const [demo, setDemo] = useState(false);
-  const lastAt = useRef(0);
+  const geo = useGeolocation(enabled);
+  const [lastSent, setLastSent] = useState<{ at: Date; point: Point } | null>(null);
+  const sentRef = useRef<{ at: number; point: Point } | null>(null);
+  const geoRef = useRef(geo);
   const fallback = useRef<Point>(DEMO_POINT);
 
+  useEffect(() => {
+    geoRef.current = geo;
+  }, [geo]);
   useEffect(() => {
     if (lastLat !== null && lastLng !== null) fallback.current = { lat: lastLat, lng: lastLng };
   }, [lastLat, lastLng]);
 
+  const send = useCallback(async (point: Point) => {
+    sentRef.current = { at: Date.now(), point };
+    try {
+      await api.patch("/officers/me/location", point);
+      setLastSent({ at: new Date(), point });
+    } catch {
+      /* the next tick retries */
+    }
+  }, []);
+
+  // A fresh device fix: send if we moved 25 m or 10 s have passed.
+  useEffect(() => {
+    if (!enabled || geo.status !== "ready") return;
+    const prev = sentRef.current;
+    if (!prev || Date.now() - prev.at >= SEND_EVERY_MS || distanceKm(prev.point, geo.point) > MOVED_KM) {
+      void send(geo.point);
+    }
+  }, [enabled, geo, send]);
+
+  // No usable fix (blocked / no signal / abroad): keep the last known position fresh at once.
+  const noFix = geo.status !== "ready" && geo.status !== "locating";
+  useEffect(() => {
+    if (enabled && noFix && !sentRef.current) void send(fallback.current);
+  }, [enabled, noFix, send]);
+
+  // Standing still or no fix: re-send every 30 s.
   useEffect(() => {
     if (!enabled) return;
-    let stopped = false;
+    const id = setInterval(() => {
+      const g = geoRef.current;
+      void send(g.status === "ready" ? g.point : fallback.current);
+    }, KEEPALIVE_MS);
+    return () => clearInterval(id);
+  }, [enabled, send]);
 
-    const send = async (point: Point, isDemo: boolean) => {
-      lastAt.current = Date.now();
-      try {
-        await api.patch("/officers/me/location", point);
-        if (stopped) return;
-        setLastSent(new Date());
-        setDemo(isDemo);
-      } catch {
-        /* next tick retries */
-      }
-    };
-
-    let watchId: number | null = null;
-    let demoTimer: ReturnType<typeof setInterval> | null = null;
-    const startDemo = () => {
-      if (demoTimer) return;
-      void send(fallback.current, true);
-      demoTimer = setInterval(() => void send(fallback.current, true), DEMO_SEND_EVERY_MS);
-    };
-
-    if (typeof navigator !== "undefined" && navigator.geolocation) {
-      watchId = navigator.geolocation.watchPosition(
-        ({ coords }) => {
-          const point = { lat: coords.latitude, lng: coords.longitude };
-          if (!inBangladesh(point)) return startDemo();
-          if (demoTimer) {
-            clearInterval(demoTimer);
-            demoTimer = null;
-          }
-          if (Date.now() - lastAt.current >= SEND_EVERY_MS) void send(point, false);
-        },
-        () => startDemo(),
-        { enableHighAccuracy: true, maximumAge: 5_000, timeout: 10_000 },
-      );
-    } else {
-      startDemo();
-    }
-
-    return () => {
-      stopped = true;
-      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
-      if (demoTimer) clearInterval(demoTimer);
-    };
+  useEffect(() => {
+    if (!enabled) sentRef.current = null;
   }, [enabled]);
 
-  return { lastSent, demo };
+  return { geo, lastSent, demo: enabled && noFix };
 }

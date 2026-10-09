@@ -1,10 +1,11 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { BadgeCheck, Loader2, MapPin, Navigation, Power, Radio, Satellite, Timer } from "lucide-react";
+import { BadgeCheck, Loader2, MapPin, Navigation, Power, Radio, Timer } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/app/app-shell";
+import { LocationCard } from "@/components/location/location-card";
 import { StatusBadge } from "@/components/incident/status-badge";
 import { IncidentMap, type MapPin as Pin } from "@/components/map/incident-map";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { distanceKm, formatDateTime, formatTime } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 import { type Incident, type IncidentDetail, incidentKeys, useIncident, useIncidents } from "@/lib/incidents";
 import { type OfficerProfile, useLocationSharing, useMe, useSetDuty } from "@/lib/officer";
+import type { GeoState, Point } from "@/lib/geo";
 import { useIncidentFeed } from "@/lib/realtime";
 import { cn } from "@/lib/utils";
 
@@ -92,7 +94,7 @@ function DutyCard({
   sharing,
 }: {
   officer: OfficerProfile;
-  sharing: { lastSent: Date | null; demo: boolean };
+  sharing: { geo: GeoState; lastSent: { at: Date; point: Point } | null; demo: boolean };
 }) {
   const { t, locale } = useI18n();
   const setDuty = useSetDuty();
@@ -130,16 +132,25 @@ function DutyCard({
       <p className="mt-3 text-xs text-muted">{t.officer.dutyHint}</p>
 
       {onDuty && (
-        <div className="mt-4 rounded-2xl bg-cream/70 p-3 text-sm">
-          <p className="flex items-center gap-2 font-medium">
-            <Satellite className="h-4 w-4 text-resolved" /> {t.officer.sharing}
-            {sharing.lastSent && (
-              <span className="ml-auto text-xs font-normal text-muted">
-                {t.officer.lastSent.replace("{t}", formatTime(sharing.lastSent.toISOString(), locale))}
-              </span>
-            )}
-          </p>
-          {sharing.demo && <p className="mt-1.5 text-xs text-muted">{t.officer.demoLocation}</p>}
+        <div className="mt-4">
+          <LocationCard
+            geo={sharing.geo}
+            title={t.location.officerTitle}
+            kind="officer"
+            fallback={
+              sharing.lastSent?.point ??
+              (officer.last_lat != null && officer.last_lng != null
+                ? { lat: officer.last_lat, lng: officer.last_lng }
+                : undefined)
+            }
+            footer={
+              <p className="mt-1.5 text-xs font-medium text-ink-soft">
+                {sharing.demo ? t.location.keepingFresh : t.location.sharingLive}
+                {sharing.lastSent &&
+                  ` · ${t.location.lastSent.replace("{t}", formatTime(sharing.lastSent.at.toISOString(), locale))}`}
+              </p>
+            }
+          />
         </div>
       )}
     </section>

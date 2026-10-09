@@ -15,7 +15,7 @@ export type MapPin = {
   id: string;
   lat: number;
   lng: number;
-  kind: "sos" | "report" | "officer" | "station";
+  kind: "sos" | "report" | "officer" | "station" | "me";
   label?: string;
 };
 
@@ -24,6 +24,7 @@ const COLOURS: Record<MapPin["kind"], string> = {
   report: "#b45309",
   officer: "#4338ca",
   station: "#131313",
+  me: "#2563eb",
 };
 
 function pinElement(pin: MapPin): HTMLElement {
@@ -63,7 +64,18 @@ function syncPins(lib: MapLibre, map: MapLibreMap, markers: Map<string, Marker>,
  * MapLibre map with OpenFreeMap tiles (free, no key). Pins are DOM markers styled with the
  * design tokens; positions update in place as props change. Fits all pins on first load.
  */
-export function IncidentMap({ pins, className, zoom = 14 }: { pins: MapPin[]; className?: string; zoom?: number }) {
+export function IncidentMap({
+  pins,
+  className,
+  zoom = 14,
+  follow = false,
+}: {
+  pins: MapPin[];
+  className?: string;
+  zoom?: number;
+  /** Keep the first pin centred as it moves (your own live position). */
+  follow?: boolean;
+}) {
   const container = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState<{ lib: MapLibre; map: MapLibreMap } | null>(null);
   const markers = useRef(new Map<string, Marker>());
@@ -96,6 +108,9 @@ export function IncidentMap({ pins, className, zoom = 14 }: { pins: MapPin[]; cl
   useEffect(() => {
     if (!ready) return;
     syncPins(ready.lib, ready.map, markers.current, pins);
+    if (follow && fitted.current && pins[0]) {
+      ready.map.easeTo({ center: [pins[0].lng, pins[0].lat], duration: 600 });
+    }
     if (!fitted.current && pins.length > 0) {
       fitted.current = true;
       if (pins.length === 1) {
@@ -106,7 +121,7 @@ export function IncidentMap({ pins, className, zoom = 14 }: { pins: MapPin[]; cl
         ready.map.fitBounds(bounds, { padding: 80, maxZoom: 15, duration: 0 });
       }
     }
-  }, [ready, pins]);
+  }, [ready, pins, follow]);
 
   return <div ref={container} className={cn("h-full w-full bg-[#f6f1ea]", className)} />;
 }

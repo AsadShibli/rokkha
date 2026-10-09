@@ -11,7 +11,8 @@ import { SosButton } from "@/components/citizen/sos-button";
 import { StatusBadge } from "@/components/incident/status-badge";
 import { api, ApiError } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
-import { currentLocation } from "@/lib/geo";
+import { LocationCard } from "@/components/location/location-card";
+import { useGeolocation, useResolvePoint } from "@/lib/geo";
 import { useI18n } from "@/lib/i18n";
 import { type IncidentDetail, OPEN_STATUSES, useIncidents } from "@/lib/incidents";
 
@@ -24,6 +25,8 @@ function Home({ firstName }: { firstName: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const incidents = useIncidents("page_size=20");
+  const geo = useGeolocation();
+  const resolvePoint = useResolvePoint(geo);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,8 +40,8 @@ function Home({ firstName }: { firstName: string }) {
     setError(null);
     setNotice(t.citizen.locating);
     try {
-      const where = await currentLocation();
-      setNotice(where.demo ? t.citizen.demoLocation : null);
+      const where = await resolvePoint();
+      setNotice(where.source === "device" ? null : t.location.usedDemo[where.source]);
       const incident = await api.post<IncidentDetail>("/incidents/sos", { lat: where.lat, lng: where.lng });
       queryClient.setQueryData(["incidents", "detail", incident.id], incident);
       void queryClient.invalidateQueries({ queryKey: ["incidents", "list"] });
@@ -96,6 +99,8 @@ function Home({ firstName }: { firstName: string }) {
       </section>
 
       <aside className="flex flex-col gap-4">
+        <LocationCard geo={geo} />
+
         <Link
           href="/citizen/report"
           className="flex items-center gap-4 rounded-3xl border border-line bg-white p-5 transition hover:border-accent hover:shadow-card"
