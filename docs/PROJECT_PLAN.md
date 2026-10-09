@@ -131,7 +131,7 @@ then an audit against the Day-0 docs (flag anything INVENTED / ASSUMED).
 - [x] **Day 1 — Sat 10 Oct:** repo, pyproject, ruff, .env.example; app factory, settings, async engine, get_db; Alembic + users migration; /auth/register, /health
 - [x] **Day 2 — Sun 11 Oct:** login, JWT access + refresh with revocation; current_user + require_role; stations + officers CRUD; officer status/location
 - [x] **Day 3 — Mon 12 Oct:** incidents + events models; DispatchService.assign_nearest (Haversine + SKIP LOCKED); POST /incidents/sos with pending fallback
-- [ ] **Day 4 — Tue 13 Oct:** accept/resolve/cancel/reassign with transition table (409); global error handlers; role-scoped list with pagination + filters
+- [x] **Day 4 — Tue 13 Oct:** accept/resolve/cancel/reassign with transition table (409); global error handlers; role-scoped list with pagination + filters
 - [ ] **Day 5 — Wed 14 Oct:** GD model, numbering, submit/review; /dashboard/stats; scripts/seed.py (3 thanas, 6 officers, 5 citizens)
 - [ ] **Day 6 — Thu 15 Oct (MVP done):** pytest (auth, assignment incl. 2 concurrent SOS, invalid transitions, GD review); Dockerfile + compose; GitHub Actions
 - [ ] **Day 7 — Fri 16 Oct:** WebSocket with token auth; Redis pub/sub
