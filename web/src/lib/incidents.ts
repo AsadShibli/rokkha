@@ -63,11 +63,13 @@ export function useIncident(id: number) {
   });
 }
 
-export function useIncidents(query = "page_size=20", refetchInterval?: number) {
+export function useIncidents(query = "page_size=20", refetchInterval?: number, inBackground = false) {
   return useQuery({
     queryKey: incidentKeys.list(query),
     queryFn: ({ signal }) => api.get<Page<Incident>>(`/incidents?${query}`, signal),
     refetchInterval,
+    // Officers must hear about a new SOS even with the tab in the background.
+    refetchIntervalInBackground: inBackground,
   });
 }
 

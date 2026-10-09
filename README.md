@@ -1,13 +1,21 @@
 # Rokkha
 
 [![CI](https://github.com/AsadShibli/rokkha/actions/workflows/ci.yml/badge.svg)](https://github.com/AsadShibli/rokkha/actions/workflows/ci.yml)
+[![Web](https://github.com/AsadShibli/rokkha/actions/workflows/web.yml/badge.svg)](https://github.com/AsadShibli/rokkha/actions/workflows/web.yml)
 
-**Rokkha** (রক্ষা, "protection") is a public-safety dispatch and Online GD backend. A citizen
+**Rokkha** (রক্ষা, "protection") is a public-safety dispatch and Online GD platform. A citizen
 presses SOS, the nearest available officer is assigned automatically, both sides follow it
 live, and citizens can file a General Diary (GD) that moves through a review workflow.
 
-**Stack:** FastAPI · SQLAlchemy 2.0 (async) · Alembic · PostgreSQL 16 · Redis · ARQ ·
+**Live demo:** **[rokkha.vercel.app](https://rokkha.vercel.app)** (one-click sign-in as any role) ·
+API docs: [rokkha-api.onrender.com/docs](https://rokkha-api.onrender.com/docs)
+
+> Free hosting: the API sleeps after 15 minutes idle and can take up to a minute to wake.
+
+**Backend:** FastAPI · SQLAlchemy 2.0 (async) · Alembic · PostgreSQL 16 · Redis · ARQ ·
 WebSockets · pytest · Docker · GitHub Actions
+**Frontend:** Next.js 16 · TypeScript · Tailwind CSS v4 · TanStack Query · MapLibre (OpenFreeMap) ·
+English / বাংলা
 
 ## The problem
 
@@ -29,6 +37,19 @@ humans for review.
 | **Online GD** | Numbers like `DHA-GUL-2026-000001` (per station, per year, no duplicates under concurrency); `submitted → under_review → approved/rejected` |
 | **AI draft** | `POST /gds/ai-draft` turns a Bangla or English complaint into a suggested GD (Groq free tier or Anthropic, JSON output), validated and never saved |
 | **Ops** | Dashboard stats, SOS rate limit (429), health checks, consistent error JSON, Docker, CI |
+
+## Screenshots
+
+| Citizen: live SOS tracking | Station admin: overview |
+|---|---|
+| ![Live incident: map, officer card, timeline](docs/screenshots/citizen-incident.jpg) | ![Admin overview: tiles, live map, open incidents](docs/screenshots/admin-overview.jpg) |
+| **Officer: active incident** | **Online GD: AI draft from Bangla** |
+| ![Officer screen with accept/resolve](docs/screenshots/officer.jpg) | ![GD form filled by AI from a Bangla complaint](docs/screenshots/citizen-gd-ai.jpg) |
+
+<p>
+  <img src="docs/screenshots/citizen-sos-mobile.jpg" alt="Citizen SOS on a phone" width="260">
+  <img src="docs/screenshots/landing-mobile.jpg" alt="Landing page on a phone" width="260">
+</p>
 
 ## Quick start
 
@@ -59,8 +80,8 @@ On-duty officers count as reachable only if seen in the last 10 minutes: send
 
 ```mermaid
 flowchart LR
-    C["Citizen app"] -- "REST + JWT" --> API
-    S["Officer / admin app"] -- "REST + JWT" --> API
+    C["Citizen screens<br/>(Next.js on Vercel)"] -- "REST + JWT" --> API
+    S["Officer / admin screens"] -- "REST + JWT" --> API
     C <-. "WebSocket" .-> API
     S <-. "WebSocket" .-> API
     subgraph API["FastAPI (Uvicorn workers)"]
@@ -152,7 +173,10 @@ uv run ruff check . && uv run ruff format --check .
 - Race tests commit for real on separate connections: two SOS / one officer, double-tap SOS,
   a refresh token used three times at once, five GDs filed in parallel.
 - WebSocket tests run the full app with real Redis.
-- CI (GitHub Actions): lint, format check, migrations, tests against Postgres 16 + Redis, Docker build.
+- CI (GitHub Actions): lint, format check, migrations, tests against Postgres 16 + Redis, Docker build;
+  a separate workflow lints, type-checks and builds the frontend when `web/` changes.
+- Frontend checks: ESLint (incl. React Compiler rules), TypeScript, production build; Lighthouse on
+  the live landing page: Accessibility 100, Best Practices 100, SEO 100, Performance ~90.
 
 ## Local development without Docker for the app
 
@@ -164,12 +188,16 @@ uv run alembic upgrade head
 uv run python -m scripts.seed
 uv run uvicorn app.main:app --reload
 uv run arq app.workers.main.WorkerSettings   # second terminal: SOS escalation
+cd web && npm install && npm run dev          # third terminal: frontend on http://localhost:3000
 ```
 
 ## Deploying
 
-One image for the API and the worker. A free setup (Render web service + Render Key Value +
-Neon Postgres, worker running in-process) is a Blueprint away; see [docs/DEPLOY.md](docs/DEPLOY.md).
+- **Frontend:** Vercel (project root `web/`, `NEXT_PUBLIC_API_URL` pointing at the API).
+- **API:** one Docker image for the API and the worker. The free setup (Render web service +
+  Render Key Value + Neon Postgres, worker running in-process) is a Blueprint away.
+
+Steps for both are in [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Project layout
 
@@ -189,6 +217,7 @@ scripts/         seed data, create super admin
 tests/           141 tests
 docs/            requirements, business rules, ERD, schema, API design, deploy
 postman/         collection for the full demo
+web/             Next.js frontend (src/app routes, src/components, src/lib API client, i18n)
 ```
 
 ## Design docs
