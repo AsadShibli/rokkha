@@ -17,7 +17,7 @@
   --color-peach: #fde9d4;
 
   --color-accent: #f8aa60;
-  --color-accent-strong: #c2610c; /* text/links on white (AA contrast) */
+  --color-accent-strong: #a65209; /* text/links on white and peach: >= 4.5:1 (WCAG AA) */
   --color-accent-soft: #fef1e4;
 
   --color-sos: #e5484d;
@@ -36,7 +36,7 @@
   --color-cancelled-soft: #f4f4f5;
 
   --shadow-card: 0 1px 2px rgb(19 19 19 / 0.04), 0 8px 24px -12px rgb(19 19 19 / 0.12);
-  --shadow-float: 0 24px 60px -24px rgb(194 97 12 / 0.35);
+  --shadow-float: 0 24px 60px -24px rgb(166 82 9 / 0.35);
 
   --animate-pulse-ring: pulse-ring 2.2s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
   @keyframes pulse-ring {

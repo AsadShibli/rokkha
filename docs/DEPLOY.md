@@ -17,7 +17,20 @@ The same image runs the ARQ worker with `arq app.workers.main.WorkerSettings`.
 | `AI_PROVIDER` | no | `auto` (default: Groq if its key is set, else Anthropic), `groq` or `anthropic` |
 | `ANTHROPIC_API_KEY`, `AI_MODEL` | no | alternative provider (paid); model defaults to `claude-opus-5-5` |
 | `SOS_ACCEPT_TIMEOUT_SECONDS` | no | escalation delay, default 120 |
+| `CORS_ORIGINS` | yes, for the web app | comma-separated browser origins, e.g. `https://rokkha.vercel.app` |
 | `RUN_WORKER_IN_PROCESS` | no | `true` runs the escalation worker inside the API (single-service hosting) |
+
+## Frontend: Vercel
+
+The Next.js app lives in `web/` and is deployed as its own Vercel project.
+
+- Dashboard: **New Project → import the repo → Root Directory `web`**, then add
+  `NEXT_PUBLIC_API_URL=https://<your-api>/api/v1`. (The Vercel account needs a GitHub login
+  connection for Git imports and automatic deploys on every push.)
+- Or from the CLI, in `web/`: `npx vercel link`, `npx vercel env add NEXT_PUBLIC_API_URL production`,
+  `npx vercel deploy --prod`.
+- Then allow the frontend origin on the API: set `CORS_ORIGINS=https://<your-app>.vercel.app`
+  on the API service and redeploy it.
 
 ## Free: Render + Neon (no card)
 
@@ -44,7 +57,7 @@ The same image runs the ARQ worker with `arq app.workers.main.WorkerSettings`.
 to wake. The `Keep alive` GitHub Actions workflow (`.github/workflows/keep-alive.yml`) pings
 `/api/v1/health` every 10 minutes to prevent that; point it elsewhere with a repository
 variable `KEEP_ALIVE_URL`, or disable the workflow in the Actions tab. GitHub may delay
-scheduled runs by a few minutes, and pauses them after 60 days without repo activity. Before a demo or interview, open `/api/v1/health` a minute early, then run
+scheduled runs by a few minutes, and pauses them after 60 days without repo activity. Before a demo, open `/api/v1/health` a minute early, then run
 `python -m scripts.seed --touch` (against Neon) so seeded on-duty officers count as reachable.
 
 ## Railway (paid after the trial)

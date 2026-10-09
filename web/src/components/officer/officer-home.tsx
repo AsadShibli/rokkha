@@ -27,7 +27,7 @@ function Home() {
   const me = useMe();
   const officer = me.data?.officer ?? null;
   // Poll for new assignments; the open incident itself streams over the WebSocket.
-  const incidents = useIncidents("page_size=10", 5_000);
+  const incidents = useIncidents("page_size=10", 5_000, true);
   const active = incidents.data?.items.find((i) => ACTIVE.has(i.status) && i.officer?.id === officer?.id);
   const history = incidents.data?.items.filter((i) => i !== active) ?? [];
   const queryClient = useQueryClient();

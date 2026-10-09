@@ -9,39 +9,46 @@ import { cn } from "@/lib/utils";
 const HOLD_MS = 2000;
 const RING = 2 * Math.PI * 92;
 
+/** Read only from event handlers and timers, never during render. */
+const clock = () => performance.now();
+
 /**
- * Press-and-hold SOS: a ring fills over 2 seconds; letting go early cancels. Works with mouse,
- * touch and keyboard (hold Space/Enter), so it can't fire from an accidental tap.
+ * Press-and-hold SOS: letting go before 2 seconds cancels, so an accidental tap never fires.
+ * Works with mouse, touch and keyboard (hold Space/Enter). The SOS itself fires from a timer;
+ * animation frames only draw the progress ring, so a throttled or backgrounded page (where
+ * browsers pause requestAnimationFrame) still sends the SOS on time.
  */
 export function SosButton({ busy, onTrigger }: { busy: boolean; onTrigger: () => void }) {
   const { t } = useI18n();
   const [progress, setProgress] = useState(0);
-  const start = useRef<number | null>(null);
+  const startedAt = useRef<number | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const frame = useRef<number | null>(null);
 
   const stop = () => {
+    if (timer.current) clearTimeout(timer.current);
     if (frame.current) cancelAnimationFrame(frame.current);
+    timer.current = null;
     frame.current = null;
-    start.current = null;
+    startedAt.current = null;
     setProgress(0);
   };
 
-  const tick = (now: number) => {
-    if (start.current === null) start.current = now;
-    const p = Math.min((now - start.current) / HOLD_MS, 1);
-    setProgress(p);
-    if (p >= 1) {
-      stop();
-      if (navigator.vibrate) navigator.vibrate(200);
-      onTrigger();
-      return;
-    }
-    frame.current = requestAnimationFrame(tick);
+  const draw = () => {
+    if (startedAt.current === null) return;
+    setProgress(Math.min((clock() - startedAt.current) / HOLD_MS, 1));
+    frame.current = requestAnimationFrame(draw);
   };
 
   const begin = () => {
-    if (busy || frame.current) return;
-    frame.current = requestAnimationFrame(tick);
+    if (busy || timer.current) return;
+    startedAt.current = clock();
+    timer.current = setTimeout(() => {
+      stop();
+      if (navigator.vibrate) navigator.vibrate(200);
+      onTrigger();
+    }, HOLD_MS);
+    frame.current = requestAnimationFrame(draw);
   };
 
   useEffect(() => () => stop(), []);
