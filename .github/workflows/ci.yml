@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: rokkha
+          POSTGRES_PASSWORD: rokkha
+          POSTGRES_DB: rokkha
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U rokkha"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql+asyncpg://rokkha:rokkha@localhost:5432/rokkha
+      TEST_DATABASE_URL: postgresql+asyncpg://rokkha:rokkha@localhost:5432/rokkha_test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Lint
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Create test database
+        run: PGPASSWORD=rokkha psql -h localhost -U rokkha -c "CREATE DATABASE rokkha_test"
+
+      - name: Migrations apply and match the models
+        run: |
+          uv run alembic upgrade head
+          uv run alembic check
+
+      - name: Tests
+        run: uv run pytest -v
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t rokkha:ci .

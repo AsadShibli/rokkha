@@ -9,7 +9,16 @@ review workflow.
 > Work in progress. The full README (architecture, decisions, demo) comes at the end of the build.
 > Design docs: [docs/](docs/).
 
-## Quick start (Windows PowerShell, macOS, Linux)
+## Quick start with Docker only
+
+```bash
+docker compose up --build -d                     # Postgres + API (migrations run on start)
+docker compose exec api python -m scripts.seed   # demo data and logins
+```
+
+Swagger UI: http://localhost:8000/docs
+
+## Local development (Windows PowerShell, macOS, Linux)
 
 Requires Docker and [uv](https://docs.astral.sh/uv/).
 
