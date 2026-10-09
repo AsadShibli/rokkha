@@ -168,8 +168,8 @@ uv run arq app.workers.main.WorkerSettings   # second terminal: SOS escalation
 
 ## Deploying
 
-One image for the API and the worker. A Render Blueprint is included; see
-[docs/DEPLOY.md](docs/DEPLOY.md).
+One image for the API and the worker. Step-by-step guides for Railway (recommended) and a
+Render Blueprint are in [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Project layout
 
