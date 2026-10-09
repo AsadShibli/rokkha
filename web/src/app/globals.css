@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+/*
+ * Rokkha design tokens.
+ * Warm, calm, high-contrast: near-black ink, one warm orange accent, soft peach surfaces,
+ * and an unmistakable SOS red. Status colours are reserved for incident state.
+ */
+@theme {
+  --font-sans: var(--font-sora), var(--font-bangla), ui-sans-serif, system-ui, sans-serif;
+
+  --color-ink: #131313;
+  --color-ink-soft: #3d3d3d;
+  --color-muted: #6b6b6b;
+  --color-line: #ece6df;
+  --color-canvas: #fffdfb;
+  --color-cream: #fff6ec;
+  --color-peach: #fde9d4;
+
+  --color-accent: #f8aa60;
+  --color-accent-strong: #c2610c; /* text/links on white (AA contrast) */
+  --color-accent-soft: #fef1e4;
+
+  --color-sos: #e5484d;
+  --color-sos-strong: #c62a30;
+  --color-sos-soft: #fdecec;
+
+  --color-pending: #b45309;
+  --color-pending-soft: #fef3c7;
+  --color-assigned: #1d4ed8;
+  --color-assigned-soft: #dbeafe;
+  --color-en-route: #4338ca;
+  --color-en-route-soft: #e0e7ff;
+  --color-resolved: #15803d;
+  --color-resolved-soft: #dcfce7;
+  --color-cancelled: #52525b;
+  --color-cancelled-soft: #f4f4f5;
+
+  --shadow-card: 0 1px 2px rgb(19 19 19 / 0.04), 0 8px 24px -12px rgb(19 19 19 / 0.12);
+  --shadow-float: 0 24px 60px -24px rgb(194 97 12 / 0.35);
+
+  --animate-pulse-ring: pulse-ring 2.2s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+  @keyframes pulse-ring {
+    0% {
+      transform: scale(0.85);
+      opacity: 0.55;
+    }
+    100% {
+      transform: scale(1.6);
+      opacity: 0;
+    }
+  }
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Soft peach glow used behind heroes and the login panel. */
+.bg-warm {
+  background:
+    radial-gradient(60% 70% at 85% 10%, rgb(248 170 96 / 0.28), transparent 70%),
+    radial-gradient(50% 60% at 0% 100%, rgb(253 233 212 / 0.9), transparent 70%),
+    var(--color-cream);
+}
+
+/* Faint street grid for the map-like illustrations. */
+.bg-streets {
+  background-color: #f6f1ea;
+  background-image:
+    linear-gradient(rgb(19 19 19 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(19 19 19 / 0.05) 1px, transparent 1px),
+    linear-gradient(115deg, transparent 47%, rgb(255 255 255 / 0.9) 47%, rgb(255 255 255 / 0.9) 53%, transparent 53%);
+  background-size: 28px 28px, 28px 28px, 100% 100%;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent-strong);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

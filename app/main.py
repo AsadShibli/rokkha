@@ -8,6 +8,7 @@ from arq import create_pool
 from arq.connections import RedisSettings
 from arq.worker import Worker
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
 
 from app.api.v1.router import api_router
@@ -81,6 +82,15 @@ def create_app() -> FastAPI:
         responses={422: {"model": ErrorResponse, "description": "Validation error"}},
     )
     register_exception_handlers(app)
+    # Tokens travel in the Authorization header (no cookies), so credentials stay off.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origin_list,
+        allow_origin_regex=settings.cors_origin_regex,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["Retry-After"],
+    )
     app.include_router(api_router, prefix=settings.api_prefix)
     return app
 

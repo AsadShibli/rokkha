@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     app_env: str = "local"
     api_prefix: str = "/api/v1"
 
+    # Browser origins allowed to call the API (comma-separated), e.g. the Vercel frontend.
+    cors_origins: str = "http://localhost:3000"
+    # Optional regex for preview deployments, e.g. https://rokkha-.*\.vercel\.app
+    cors_origin_regex: str | None = None
+
     database_url: str = "postgresql+asyncpg://rokkha:rokkha@localhost:5433/rokkha"
     test_database_url: str = "postgresql+asyncpg://rokkha:rokkha@localhost:5433/rokkha_test"
     redis_url: str = "redis://localhost:6379/0"
@@ -67,6 +72,10 @@ class Settings(BaseSettings):
         if self.app_env not in {"local", "test"} and self.jwt_secret == DEV_JWT_SECRET:
             raise ValueError("JWT_SECRET must be set outside local development")
         return self
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [o.strip().rstrip("/") for o in self.cors_origins.split(",") if o.strip()]
 
 
 @lru_cache
