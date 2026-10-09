@@ -15,6 +15,7 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+asyncpg://rokkha:rokkha@localhost:5433/rokkha"
     test_database_url: str = "postgresql+asyncpg://rokkha:rokkha@localhost:5433/rokkha_test"
+    redis_url: str = "redis://localhost:6379/0"
 
     bcrypt_rounds: int = 12
 
