@@ -18,7 +18,7 @@ cp .env.example .env            # PowerShell: Copy-Item .env.example .env
 docker compose up -d db         # Postgres on localhost:5433 (+ rokkha_test database)
 uv sync                         # create .venv and install dependencies
 uv run alembic upgrade head     # create tables
-uv run python -m scripts.create_super_admin --name "Control Room" --phone +8801700000001
+uv run python -m scripts.seed      # demo data; prints the logins (password: rokkha1234)
 uv run uvicorn app.main:app --reload
 ```
 
