@@ -14,9 +14,11 @@ const clock = () => performance.now();
 
 /**
  * Press-and-hold SOS: letting go before 2 seconds cancels, so an accidental tap never fires.
- * Works with mouse, touch and keyboard (hold Space/Enter). The SOS itself fires from a timer;
- * animation frames only draw the progress ring, so a throttled or backgrounded page (where
- * browsers pause requestAnimationFrame) still sends the SOS on time.
+ * Works with mouse, touch and keyboard (hold Space/Enter).
+ *
+ * The SOS fires from a timer, and animation frames only draw the ring, so a throttled or
+ * backgrounded page still sends it. Releasing also checks the elapsed time: on a busy page the
+ * timer callback can run late, and letting go once the ring is full must send, not cancel.
  */
 export function SosButton({ busy, onTrigger }: { busy: boolean; onTrigger: () => void }) {
   const { t } = useI18n();
@@ -40,15 +42,23 @@ export function SosButton({ busy, onTrigger }: { busy: boolean; onTrigger: () =>
     frame.current = requestAnimationFrame(draw);
   };
 
+  const fire = () => {
+    stop();
+    if (navigator.vibrate) navigator.vibrate(200);
+    onTrigger();
+  };
+
   const begin = () => {
     if (busy || timer.current) return;
     startedAt.current = clock();
-    timer.current = setTimeout(() => {
-      stop();
-      if (navigator.vibrate) navigator.vibrate(200);
-      onTrigger();
-    }, HOLD_MS);
+    timer.current = setTimeout(fire, HOLD_MS);
     frame.current = requestAnimationFrame(draw);
+  };
+
+  /** Let go: send if the full 2 seconds have passed (even if the timer hasn't run yet). */
+  const release = () => {
+    if (startedAt.current !== null && clock() - startedAt.current >= HOLD_MS) fire();
+    else stop();
   };
 
   useEffect(() => () => stop(), []);
@@ -63,7 +73,7 @@ export function SosButton({ busy, onTrigger }: { busy: boolean; onTrigger: () =>
           e.currentTarget.setPointerCapture(e.pointerId);
           begin();
         }}
-        onPointerUp={stop}
+        onPointerUp={release}
         onPointerCancel={stop}
         onKeyDown={(e) => {
           if ((e.key === " " || e.key === "Enter") && !e.repeat) {
@@ -71,7 +81,7 @@ export function SosButton({ busy, onTrigger }: { busy: boolean; onTrigger: () =>
             begin();
           }
         }}
-        onKeyUp={stop}
+        onKeyUp={release}
         onContextMenu={(e) => e.preventDefault()}
         aria-label={t.citizen.sosHold}
         className="relative grid h-56 w-56 touch-none place-items-center rounded-full select-none disabled:cursor-wait"
