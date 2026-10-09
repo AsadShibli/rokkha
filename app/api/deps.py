@@ -5,13 +5,21 @@ from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import AccountDisabledError, ForbiddenError, InvalidTokenError
+from app.core.config import get_settings
+from app.core.exceptions import (
+    AccountDisabledError,
+    ForbiddenError,
+    InvalidTokenError,
+    RateLimitedError,
+)
 from app.core.security import decode_token
 from app.db.session import get_db
 from app.models.enums import UserRole
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
+from app.services.rate_limit import NoopRateLimiter, RateLimiter, RedisRateLimiter
 from app.services.realtime import EventPublisher, NullPublisher, RedisPublisher
+from app.workers.queue import ArqJobQueue, JobQueue, NullJobQueue
 
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 
@@ -22,6 +30,20 @@ def get_publisher(request: Request) -> EventPublisher:
 
 
 Publisher = Annotated[EventPublisher, Depends(get_publisher)]
+
+
+def get_job_queue(request: Request) -> JobQueue:
+    arq = getattr(request.app.state, "arq", None)
+    return ArqJobQueue(arq) if arq is not None else NullJobQueue()
+
+
+Queue = Annotated[JobQueue, Depends(get_job_queue)]
+
+
+def get_rate_limiter(request: Request) -> RateLimiter:
+    redis = getattr(request.app.state, "redis", None)
+    return RedisRateLimiter(redis) if redis is not None else NoopRateLimiter()
+
 
 # auto_error=False: a missing header reaches our handler and gets the standard error shape.
 bearer = HTTPBearer(auto_error=False, description="Access token from /auth/login")
@@ -63,3 +85,19 @@ StationAdmin = Annotated[User, Depends(require_role(UserRole.STATION_ADMIN))]
 AnyAdmin = Annotated[User, Depends(require_role(UserRole.STATION_ADMIN, UserRole.SUPER_ADMIN))]
 OfficerUser = Annotated[User, Depends(require_role(UserRole.OFFICER))]
 Citizen = Annotated[User, Depends(require_role(UserRole.CITIZEN))]
+
+
+async def limit_sos(
+    citizen: Citizen, limiter: Annotated[RateLimiter, Depends(get_rate_limiter)]
+) -> User:
+    """BR Incidents-creation 8: at most N SOS attempts per window per citizen (429)."""
+    settings = get_settings()
+    decision = await limiter.hit(
+        f"rate:sos:{citizen.id}", settings.sos_rate_limit, settings.sos_rate_window_seconds
+    )
+    if not decision.allowed:
+        raise RateLimitedError(decision.retry_after)
+    return citizen
+
+
+RateLimitedCitizen = Annotated[User, Depends(limit_sos)]

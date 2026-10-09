@@ -1,6 +1,8 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
+from arq import create_pool
+from arq.connections import RedisSettings
 from fastapi import FastAPI
 from redis.asyncio import Redis
 
@@ -13,8 +15,11 @@ from app.schemas.errors import ErrorResponse
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    app.state.redis = Redis.from_url(get_settings().redis_url, decode_responses=True)
+    redis_url = get_settings().redis_url
+    app.state.redis = Redis.from_url(redis_url, decode_responses=True)
+    app.state.arq = await create_pool(RedisSettings.from_dsn(redis_url))
     yield
+    await app.state.arq.aclose()
     await app.state.redis.aclose()
     await engine.dispose()
 

@@ -102,8 +102,9 @@ Every rule here should map to a service check, a DB constraint, or a test. Rules
    `resolved_at`, `cancelled_at`.
 10. **Response time** = `accepted_at - created_at`, counted only for incidents that were
     accepted.
-11. An SOS still `assigned` (not accepted) after 2 minutes moves to the next-nearest reachable
-    officer; the first officer goes back to `available`. **(Stretch)**
+11. An SOS still `assigned` (not accepted) after 2 minutes moves to the nearest reachable
+    officer who has not had it yet; the first officer goes back to `available`. If nobody is
+    left, it returns to `pending` for the station admin. **(Stretch)**
 
 ## Online GD
 

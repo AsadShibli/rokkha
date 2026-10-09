@@ -33,6 +33,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://rokkha:rokkha@db:5432/rokkha
       REDIS_URL: redis://redis:6379/0
       JWT_SECRET: ${JWT_SECRET:-compose-demo-secret-change-me-0123456789abcdef}
+      SOS_ACCEPT_TIMEOUT_SECONDS: ${SOS_ACCEPT_TIMEOUT_SECONDS:-120}
     ports:
       - "8000:8000"
     depends_on:
@@ -49,6 +50,19 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+
+  worker:
+    build: .
+    command: arq app.workers.main.WorkerSettings
+    environment:
+      APP_ENV: docker
+      DATABASE_URL: postgresql+asyncpg://rokkha:rokkha@db:5432/rokkha
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:-compose-demo-secret-change-me-0123456789abcdef}
+      SOS_ACCEPT_TIMEOUT_SECONDS: ${SOS_ACCEPT_TIMEOUT_SECONDS:-120}
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   pgdata:
