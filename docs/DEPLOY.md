@@ -14,8 +14,33 @@ The same image runs the ARQ worker with `arq app.workers.main.WorkerSettings`.
 | `ANTHROPIC_API_KEY` | no | enables `POST /gds/ai-draft`; without it that endpoint returns 503 `AI_UNAVAILABLE` |
 | `AI_MODEL` | no | defaults to `claude-opus-5-5` |
 | `SOS_ACCEPT_TIMEOUT_SECONDS` | no | escalation delay, default 120 |
+| `RUN_WORKER_IN_PROCESS` | no | `true` runs the escalation worker inside the API (single-service hosting) |
 
-## Railway (recommended: no sleep, quick deploys)
+## Free: Render + Neon (no card)
+
+| Piece | Where | Note |
+|---|---|---|
+| API + escalation worker | Render free web service | one container; `RUN_WORKER_IN_PROCESS=true` runs the worker inside it |
+| Redis | Render free Key Value | internal-only; not metered per command |
+| Postgres | Neon free | doesn't expire (Render's free Postgres is deleted after 30 days) |
+
+1. **Neon:** sign in at https://neon.com, create a project, copy the connection string
+   (`postgresql://...neon.tech/neondb?sslmode=require&channel_binding=require` is fine; the app
+   converts it for asyncpg).
+2. **Render:** sign in at https://render.com with GitHub → **New → Blueprint** → pick `rokkha`.
+   It reads [`render.yaml`](../render.yaml) and creates `rokkha-api` + `rokkha-redis`.
+   When asked, paste the Neon string as `DATABASE_URL` (and optionally `ANTHROPIC_API_KEY`).
+3. First deploy builds the image (a few minutes). Migrations run on start.
+4. Seed from your machine against Neon:
+   `DATABASE_URL="<neon string>" uv run python -m scripts.seed`
+   (PowerShell: `$env:DATABASE_URL="<neon string>"; uv run python -m scripts.seed`)
+5. Swagger: `https://rokkha-api.onrender.com/docs` (or the name Render assigned).
+
+**Sleep:** free web services sleep after 15 minutes without traffic and take about a minute
+to wake. Before a demo or interview, open `/api/v1/health` a minute early, then run
+`python -m scripts.seed --touch` (against Neon) so seeded on-duty officers count as reachable.
+
+## Railway (paid after the trial)
 
 Railway builds the Dockerfile from GitHub and runs the API, the worker, Postgres and Redis in
 one project. Railway sets `PORT`; the image already listens on it.
@@ -51,23 +76,6 @@ Swagger: `https://<generated-domain>/docs`.
 
 Why not Vercel: its Python functions are serverless and short-lived, so they can't hold
 WebSocket connections, run the ARQ worker, or keep a Redis subscription open.
-
-## Render (Blueprint)
-
-1. Sign in to https://render.com with GitHub and allow access to the `rokkha` repo.
-2. **New → Blueprint**, pick the repo. Render reads [`render.yaml`](../render.yaml) and creates
-   `rokkha-db` (Postgres), `rokkha-redis` (Key Value), `rokkha-api` (web) and `rokkha-worker`.
-   The worker is a paid plan; delete it from the blueprint to stay on the free tier (SOS
-   escalation then doesn't run; everything else does).
-3. Optionally set `ANTHROPIC_API_KEY` on `rokkha-api` in the dashboard.
-4. When the deploy is live, open the web service's **Shell** and seed demo data:
-   `python -m scripts.seed`.
-5. Swagger: `https://<your-service>.onrender.com/docs`. Health:
-   `https://<your-service>.onrender.com/api/v1/health`.
-
-Free web services sleep after inactivity; the first request after that takes ~30-60 s.
-Before a demo, run `python -m scripts.seed --touch` so the seeded on-duty officers count as
-reachable (they must have been seen in the last 10 minutes).
 
 ## Any other Docker host (Railway, Fly.io, a VPS)
 

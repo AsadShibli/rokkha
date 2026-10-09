@@ -114,3 +114,11 @@ def test_hosted_postgres_urls_get_asyncpg_driver() -> None:
     settings = Settings(database_url="postgres://u:p@host:5432/db")
 
     assert settings.database_url == "postgresql+asyncpg://u:p@host:5432/db"
+
+
+def test_neon_url_options_are_translated_for_asyncpg() -> None:
+    neon = "postgresql://u:p@ep-x.neon.tech/db?sslmode=require&channel_binding=require"
+
+    settings = Settings(database_url=neon)
+
+    assert settings.database_url == "postgresql+asyncpg://u:p@ep-x.neon.tech/db?ssl=require"
