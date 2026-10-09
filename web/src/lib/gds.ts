@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { api } from "./api";
-import type { Page } from "./incidents";
+import type { Page, StationBrief } from "./incidents";
 
 export type GdCategory = "lost_item" | "lost_document" | "missing_person" | "threat" | "harassment" | "other";
 export type GdStatus = "submitted" | "under_review" | "approved" | "rejected";
@@ -22,6 +22,7 @@ export type Gd = {
   gd_number: string;
   citizen_id: number;
   station_id: number;
+  station: StationBrief;
   category: GdCategory;
   title: string;
   details: string;

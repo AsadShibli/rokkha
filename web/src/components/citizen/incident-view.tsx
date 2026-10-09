@@ -105,6 +105,11 @@ function View() {
             </div>
             <p className="mt-2 text-lg font-semibold">{t.incident.status[data.status]}</p>
             <p className="mt-0.5 text-sm text-muted">{t.incident.statusBody[data.status]}</p>
+            {data.station && (
+              <p className="mt-2 text-xs font-medium text-ink-soft">
+                {t.incident.handledBy.replace("{name}", data.station.name)}
+              </p>
+            )}
           </div>
         </div>
 
@@ -124,6 +129,10 @@ function View() {
                   <p className="font-semibold">{officer.name}</p>
                   <p className="text-sm text-muted">
                     {officer.rank}
+                    {officer.badge_no && ` · ${t.incident.badge.replace("{n}", officer.badge_no)}`}
+                  </p>
+                  <p className="text-sm text-muted">
+                    {officer.station && t.incident.thana.replace("{name}", officer.station.name)}
                     {km !== null && ` · ${km.toLocaleString(locale === "bn" ? "bn-BD" : "en", { maximumFractionDigits: 1 })} km`}
                   </p>
                 </div>

@@ -154,6 +154,9 @@ export const bn: Dictionary = {
       cancelled: "ঘটনাটি বাতিল করা হয়েছে।",
     },
     officer: "আপনার অফিসার",
+    badge: "ব্যাজ {n}",
+    thana: "{name} থানা",
+    handledBy: "{name} থানা দেখছে",
     call: "কল",
     timeline: "সময়রেখা",
     events: {

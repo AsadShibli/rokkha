@@ -197,7 +197,7 @@ class IncidentService:
             raise NoStationError()
         incident = Incident(
             citizen_id=citizen.id,
-            station_id=station.id,
+            station=station,
             type=type_,
             status=IncidentStatus.PENDING,
             lat=lat,

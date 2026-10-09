@@ -15,6 +15,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base, IdMixin, TimestampMixin
 from app.models.enums import IncidentStatus, IncidentType, sql_in
 from app.models.officer import Officer
+from app.models.station import Station
 from app.models.types import str_enum
 
 _OPEN = "status IN ('pending', 'assigned', 'en_route')"
@@ -76,6 +77,7 @@ class Incident(IdMixin, TimestampMixin, Base):
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     officer: Mapped[Officer | None] = relationship(lazy="joined")
+    station: Mapped[Station] = relationship(lazy="joined", innerjoin=True)
     events: Mapped[list["IncidentEvent"]] = relationship(
         back_populates="incident",
         lazy="raise",

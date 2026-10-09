@@ -189,7 +189,10 @@ function GdPage() {
                   <GdStatusBadge status={gd.status} />
                 </div>
                 <p className="mt-1 text-sm font-medium">{gd.title}</p>
-                <p className="text-xs text-muted">{formatDateTime(gd.created_at, locale)}</p>
+                <p className="text-xs text-muted">
+                  {gd.station && `${t.incident.thana.replace("{name}", gd.station.name)} · `}
+                  {formatDateTime(gd.created_at, locale)}
+                </p>
                 {gd.review_note && (
                   <p className="mt-1.5 rounded-xl bg-cream/70 px-3 py-2 text-xs text-ink-soft">
                     {t.gd.reviewNote}: {gd.review_note}

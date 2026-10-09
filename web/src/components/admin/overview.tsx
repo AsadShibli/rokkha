@@ -135,7 +135,8 @@ function Overview({ user }: { user: User }) {
                 </div>
                 <p className="mt-1 text-xs text-muted">
                   {formatTime(incident.created_at, locale)}
-                  {incident.officer && ` · ${incident.officer.name}`}
+                  {incident.officer &&
+                    ` · ${incident.officer.name}${incident.officer.badge_no ? ` (${incident.officer.badge_no})` : ""}`}
                 </p>
                 {incident.description && <p className="mt-1.5 line-clamp-2 text-sm text-ink-soft">{incident.description}</p>}
                 {user.role === "station_admin" && (

@@ -7,11 +7,15 @@ import { api } from "./api";
 export type IncidentStatus = "pending" | "assigned" | "en_route" | "resolved" | "cancelled";
 export type IncidentType = "sos" | "report";
 
+export type StationBrief = { id: number; name: string; code: string };
+
 export type OfficerBrief = {
   id: number;
   name: string;
   rank: string;
+  badge_no: string;
   phone: string;
+  station: StationBrief;
   last_lat: number | null;
   last_lng: number | null;
 };
@@ -34,6 +38,7 @@ export type Incident = {
   lng: number;
   description: string | null;
   station_id: number;
+  station: StationBrief;
   citizen_id: number;
   officer: OfficerBrief | null;
   created_at: string;

@@ -13,6 +13,16 @@ class StationCreate(BaseModel):
     lng: Longitude
 
 
+class StationBrief(BaseModel):
+    """Enough to name a thana in another resource (incident, GD, officer)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    code: str
+
+
 class StationOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

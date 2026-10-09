@@ -152,6 +152,9 @@ export const en = {
       cancelled: "This incident was cancelled.",
     },
     officer: "Your officer",
+    badge: "Badge {n}",
+    thana: "{name} thana",
+    handledBy: "Handled by {name} thana",
     call: "Call",
     timeline: "Timeline",
     events: {

@@ -40,7 +40,7 @@ class GdService:
         gd = Gd(
             gd_number=f"{station.city_code}-{station.code}-{year}-{seq:06d}",
             citizen_id=citizen.id,
-            station_id=station.id,
+            station=station,
             category=data.category,
             title=data.title,
             details=data.details,
