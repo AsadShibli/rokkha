@@ -41,7 +41,10 @@ The same image runs the ARQ worker with `arq app.workers.main.WorkerSettings`.
 5. Swagger: `https://rokkha-api.onrender.com/docs` (or the name Render assigned).
 
 **Sleep:** free web services sleep after 15 minutes without traffic and take about a minute
-to wake. Before a demo or interview, open `/api/v1/health` a minute early, then run
+to wake. The `Keep alive` GitHub Actions workflow (`.github/workflows/keep-alive.yml`) pings
+`/api/v1/health` every 10 minutes to prevent that; point it elsewhere with a repository
+variable `KEEP_ALIVE_URL`, or disable the workflow in the Actions tab. GitHub may delay
+scheduled runs by a few minutes, and pauses them after 60 days without repo activity. Before a demo or interview, open `/api/v1/health` a minute early, then run
 `python -m scripts.seed --touch` (against Neon) so seeded on-duty officers count as reachable.
 
 ## Railway (paid after the trial)
