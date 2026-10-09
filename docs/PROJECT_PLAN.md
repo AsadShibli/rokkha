@@ -128,7 +128,7 @@ then an audit against the Day-0 docs (flag anything INVENTED / ASSUMED).
 
 - [x] **Day 0 — Fri 9 Oct:** design docs: system_requirements, business_rules, ERD, database_schema, api_design
 
-- [ ] **Day 1 — Sat 10 Oct:** repo, pyproject, ruff, .env.example; app factory, settings, async engine, get_db; Alembic + users migration; /auth/register, /health
+- [x] **Day 1 — Sat 10 Oct:** repo, pyproject, ruff, .env.example; app factory, settings, async engine, get_db; Alembic + users migration; /auth/register, /health
 - [ ] **Day 2 — Sun 11 Oct:** login, JWT access + refresh with revocation; current_user + require_role; stations + officers CRUD; officer status/location
 - [ ] **Day 3 — Mon 12 Oct:** incidents + events models; DispatchService.assign_nearest (Haversine + SKIP LOCKED); POST /incidents/sos with pending fallback
 - [ ] **Day 4 — Tue 13 Oct:** accept/resolve/cancel/reassign with transition table (409); global error handlers; role-scoped list with pagination + filters

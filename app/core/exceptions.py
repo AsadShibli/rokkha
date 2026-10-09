@@ -1,0 +1,92 @@
+"""Application errors and the handlers that turn every error into one JSON shape:
+
+{"error": {"code": "...", "message": "...", "details": [...]}}
+"""
+
+import logging
+from http import HTTPStatus
+from typing import Any
+
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+logger = logging.getLogger(__name__)
+
+
+class AppError(Exception):
+    status_code: int = status.HTTP_400_BAD_REQUEST
+    code: str = "BAD_REQUEST"
+    message: str = "Bad request."
+
+    def __init__(self, message: str | None = None, details: list[dict[str, Any]] | None = None):
+        self.message = message or self.message
+        self.details = details or []
+        super().__init__(self.message)
+
+
+class NotFoundError(AppError):
+    status_code = status.HTTP_404_NOT_FOUND
+    code = "NOT_FOUND"
+    message = "Resource not found."
+
+
+class ConflictError(AppError):
+    status_code = status.HTTP_409_CONFLICT
+    code = "CONFLICT"
+    message = "Resource already exists."
+
+
+def error_body(code: str, message: str, details: list[dict[str, Any]] | None = None) -> dict:
+    return {"error": {"code": code, "message": message, "details": details or []}}
+
+
+def _field_name(err: dict) -> str:
+    # ("body", "phone") -> "phone"; ("query", "page") -> "page"; ("body",) -> "body"
+    loc = err["loc"]
+    if err["type"] == "json_invalid" or len(loc) == 1:
+        return str(loc[0])
+    return ".".join(str(p) for p in loc[1:])
+
+
+def _clean_message(msg: str) -> str:
+    # Pydantic prefixes messages from custom validators with "Value error, ".
+    return msg.removeprefix("Value error, ")
+
+
+async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:
+    return JSONResponse(error_body(exc.code, exc.message, exc.details), status_code=exc.status_code)
+
+
+async def validation_error_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
+    details = [
+        {"field": _field_name(err), "message": _clean_message(err["msg"])} for err in exc.errors()
+    ]
+    return JSONResponse(
+        error_body("VALIDATION_ERROR", "Some fields are invalid.", details),
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+    )
+
+
+async def http_error_handler(_: Request, exc: StarletteHTTPException) -> JSONResponse:
+    # Framework-raised errors (unknown route, wrong method, ...) keep the same shape.
+    phrase = HTTPStatus(exc.status_code).phrase
+    code = phrase.upper().replace(" ", "_").replace("-", "_")
+    message = exc.detail if isinstance(exc.detail, str) else phrase
+    return JSONResponse(error_body(code, message), status_code=exc.status_code, headers=exc.headers)
+
+
+async def unhandled_error_handler(_: Request, exc: Exception) -> JSONResponse:
+    logger.exception("Unhandled error", exc_info=exc)
+    return JSONResponse(
+        error_body("INTERNAL_ERROR", "Something went wrong."),
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    )
+
+
+def register_exception_handlers(app: FastAPI) -> None:
+    app.add_exception_handler(AppError, app_error_handler)
+    app.add_exception_handler(RequestValidationError, validation_error_handler)
+    app.add_exception_handler(StarletteHTTPException, http_error_handler)
+    app.add_exception_handler(Exception, unhandled_error_handler)
