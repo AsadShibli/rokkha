@@ -92,8 +92,8 @@ stations.
 Indexes:
 - unique `user_id`, unique `badge_no`
 - `(station_id, duty_status)`: station admin's officer list and reassign candidates
-- `(duty_status, last_seen_at)` **partial `WHERE duty_status = 'available'`**: the nearest
-  officer search only scans reachable officers.
+- `(last_seen_at)` **partial `WHERE duty_status = 'available'`**: the nearest officer search
+  only scans available officers (duty_status is fixed by the WHERE, so it isn't a key column).
 
 Rule (app-level): the user's `role` must be `officer`. Postgres can't CHECK across tables, so
 the service enforces it.

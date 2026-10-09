@@ -19,11 +19,38 @@ class AppError(Exception):
     status_code: int = status.HTTP_400_BAD_REQUEST
     code: str = "BAD_REQUEST"
     message: str = "Bad request."
+    headers: dict[str, str] | None = None
 
     def __init__(self, message: str | None = None, details: list[dict[str, Any]] | None = None):
         self.message = message or self.message
         self.details = details or []
         super().__init__(self.message)
+
+
+class InvalidCredentialsError(AppError):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    code = "INVALID_CREDENTIALS"
+    message = "Phone or password is incorrect."
+    headers = {"WWW-Authenticate": "Bearer"}
+
+
+class InvalidTokenError(AppError):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    code = "INVALID_TOKEN"
+    message = "Token is missing, invalid, expired or revoked."
+    headers = {"WWW-Authenticate": "Bearer"}
+
+
+class AccountDisabledError(AppError):
+    status_code = status.HTTP_403_FORBIDDEN
+    code = "ACCOUNT_DISABLED"
+    message = "This account is disabled."
+
+
+class ForbiddenError(AppError):
+    status_code = status.HTTP_403_FORBIDDEN
+    code = "FORBIDDEN"
+    message = "Your role is not allowed to do this."
 
 
 class NotFoundError(AppError):
@@ -36,6 +63,12 @@ class ConflictError(AppError):
     status_code = status.HTTP_409_CONFLICT
     code = "CONFLICT"
     message = "Resource already exists."
+
+
+class OfficerBusyError(AppError):
+    status_code = status.HTTP_409_CONFLICT
+    code = "OFFICER_BUSY"
+    message = "Officer is busy with an incident; resolve it or ask the station to reassign."
 
 
 def error_body(code: str, message: str, details: list[dict[str, Any]] | None = None) -> dict:
@@ -56,7 +89,11 @@ def _clean_message(msg: str) -> str:
 
 
 async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:
-    return JSONResponse(error_body(exc.code, exc.message, exc.details), status_code=exc.status_code)
+    return JSONResponse(
+        error_body(exc.code, exc.message, exc.details),
+        status_code=exc.status_code,
+        headers=exc.headers,
+    )
 
 
 async def validation_error_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
