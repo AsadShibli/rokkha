@@ -60,13 +60,17 @@ Responses reuse these shapes so each endpoint below only names them.
   "badge_no": "KOT-1043", "rank": "Sub-Inspector", "duty_status": "available",
   "last_lat": 24.90, "last_lng": 91.87, "last_seen_at": "..." }
 
-// OfficerBrief: what a citizen sees about their officer (no badge history, no exact last_seen)
-{ "id": 4, "name": "...", "rank": "Sub-Inspector", "phone": "+8801...",
-  "last_lat": 24.90, "last_lng": 91.87 }
+// StationBrief: names a thana inside other resources
+{ "id": 2, "name": "Kotwali", "code": "KOT" }
+
+// OfficerBrief: what a citizen sees about their officer, enough to identify and reach them
+// (no exact last_seen)
+{ "id": 4, "name": "...", "rank": "Sub-Inspector", "badge_no": "KOT-1043", "phone": "+8801...",
+  "station": StationBrief, "last_lat": 24.90, "last_lng": 91.87 }
 
 // Incident (list item)
 { "id": 31, "type": "sos", "status": "assigned", "lat": 24.89, "lng": 91.87,
-  "description": null, "station_id": 2, "citizen_id": 7,
+  "description": null, "station_id": 2, "station": StationBrief, "citizen_id": 7,
   "officer": OfficerBrief | null, "created_at": "...", "assigned_at": "...",
   "accepted_at": null, "resolved_at": null, "cancelled_at": null }
 
@@ -77,6 +81,7 @@ Responses reuse these shapes so each endpoint below only names them.
 
 // Gd
 { "id": 5, "gd_number": "SYL-KOT-2026-000123", "citizen_id": 7, "station_id": 2,
+  "station": StationBrief,
   "category": "lost_document", "title": "...", "details": "...",
   "incident_date": "2026-10-11", "status": "submitted",
   "reviewed_by": null, "reviewed_at": null, "review_note": null, "created_at": "..." }

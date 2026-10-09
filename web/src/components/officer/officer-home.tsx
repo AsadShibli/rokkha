@@ -200,6 +200,9 @@ function ActiveIncident({ incident, officer }: { incident: Incident; officer: Of
             ? t.officer.away.replace("{km}", km.toLocaleString(locale === "bn" ? "bn-BD" : "en", { maximumFractionDigits: 1 }))
             : `${data.lat.toFixed(4)}, ${data.lng.toFixed(4)}`}
         </p>
+        {data.station && (
+          <p className="mt-1 text-sm text-muted">{t.incident.handledBy.replace("{name}", data.station.name)}</p>
+        )}
         {data.description && <p className="mt-4 rounded-2xl bg-cream/70 p-3.5 text-sm">{data.description}</p>}
         {assigned && (
           <p className="mt-4 flex items-center gap-2 text-sm text-pending">

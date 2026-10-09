@@ -14,6 +14,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, IdMixin, TimestampMixin
 from app.models.enums import DutyStatus, sql_in
+from app.models.station import Station
 from app.models.types import str_enum
 from app.models.user import User
 
@@ -52,3 +53,5 @@ class Officer(IdMixin, TimestampMixin, Base):
     # Always needed to show the officer's name, so load it in the same query. INNER JOIN
     # (user_id is NOT NULL), which also lets FOR UPDATE OF officers work on the query.
     user: Mapped[User] = relationship(back_populates="officer", lazy="joined", innerjoin=True)
+    # Citizens see which thana their officer belongs to.
+    station: Mapped[Station] = relationship(lazy="joined", innerjoin=True)

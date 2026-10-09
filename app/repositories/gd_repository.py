@@ -52,7 +52,7 @@ class GdRepository:
     ) -> Gd | None:
         stmt = select(Gd).where(Gd.gd_number == gd_number, scope)
         if for_update:
-            stmt = stmt.with_for_update()
+            stmt = stmt.with_for_update(of=Gd)
         return await self.session.scalar(stmt)
 
     async def list(

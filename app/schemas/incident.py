@@ -6,6 +6,7 @@ from app.models.enums import IncidentStatus, IncidentType
 from app.models.incident import Incident
 from app.models.officer import Officer
 from app.schemas.common import Latitude, Longitude
+from app.schemas.station import StationBrief
 
 
 class SosIn(BaseModel):
@@ -29,12 +30,15 @@ class ReassignIn(NoteIn):
 
 
 class OfficerBrief(BaseModel):
-    """What the citizen and staff see about the handling officer."""
+    """What the citizen and staff see about the handling officer: enough to identify them
+    (name, rank, badge number, thana) and reach them."""
 
     id: int
     name: str
     rank: str
+    badge_no: str
     phone: str
+    station: StationBrief
     last_lat: float | None
     last_lng: float | None
 
@@ -44,7 +48,9 @@ class OfficerBrief(BaseModel):
             id=officer.id,
             name=officer.user.name,
             rank=officer.rank,
+            badge_no=officer.badge_no,
             phone=officer.user.phone,
+            station=StationBrief.model_validate(officer.station),
             last_lat=officer.last_lat,
             last_lng=officer.last_lng,
         )
@@ -70,6 +76,7 @@ class IncidentOut(BaseModel):
     lng: float
     description: str | None
     station_id: int
+    station: StationBrief
     citizen_id: int
     officer: OfficerBrief | None
     created_at: datetime
@@ -88,6 +95,7 @@ class IncidentOut(BaseModel):
             lng=incident.lng,
             description=incident.description,
             station_id=incident.station_id,
+            station=StationBrief.model_validate(incident.station),
             citizen_id=incident.citizen_id,
             officer=OfficerBrief.from_officer(incident.officer) if incident.officer else None,
             created_at=incident.created_at,

@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from app.core.time import local_today
 from app.models.enums import GdCategory, GdStatus
+from app.schemas.station import StationBrief
 
 
 class GdCreate(BaseModel):
@@ -49,6 +50,7 @@ class GdOut(BaseModel):
     gd_number: str
     citizen_id: int
     station_id: int
+    station: StationBrief
     category: GdCategory
     title: str
     details: str
