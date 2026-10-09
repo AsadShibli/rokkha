@@ -1,5 +1,5 @@
-import { RoleHome } from "@/components/app/role-home";
+import { OfficerHome } from "@/components/officer/officer-home";
 
-export default function OfficerHome() {
-  return <RoleHome roles={["officer"]} />;
+export default function OfficerPage() {
+  return <OfficerHome />;
 }
