@@ -52,7 +52,7 @@ export function AppShell({
     <div className="min-h-screen bg-canvas">
       <header className="sticky top-0 z-30 border-b border-line bg-white/85 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-          <Link href={homeFor(user.role)} aria-label="Rokkha home">
+          <Link href={homeFor(user.role)}>
             <Logo />
           </Link>
           <div className="flex items-center gap-2 sm:gap-3">

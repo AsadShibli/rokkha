@@ -12,7 +12,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <aside className="bg-warm relative hidden flex-col justify-between overflow-hidden p-12 lg:flex">
-        <Link href="/" aria-label="Rokkha home">
+        <Link href="/">
           <Logo />
         </Link>
         <div className="max-w-md">
@@ -25,7 +25,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
 
       <main className="flex flex-col">
         <div className="flex items-center justify-between p-4 sm:p-6">
-          <Link href="/" className="lg:invisible" aria-label="Rokkha home">
+          <Link href="/" className="lg:invisible">
             <Logo />
           </Link>
           <LanguageToggle />

@@ -8,10 +8,12 @@ import "./globals.css";
 const sora = Sora({ variable: "--font-sora", subsets: ["latin"] });
 
 // Sora has no Bengali glyphs; the browser falls back to Hind Siliguri for Bangla text.
+// Not preloaded: most visitors read English first, and Bangla glyphs load on demand.
 const bangla = Hind_Siliguri({
   variable: "--font-bangla",
-  subsets: ["bengali", "latin"],
-  weight: ["400", "500", "600", "700"],
+  subsets: ["bengali"],
+  weight: ["400", "600"],
+  preload: false,
 });
 
 export const metadata: Metadata = {

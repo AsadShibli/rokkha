@@ -40,7 +40,7 @@ export function Landing() {
       {/* nav */}
       <header className="sticky top-0 z-30 border-b border-line/60 bg-canvas/80 backdrop-blur">
         <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" aria-label="Rokkha home">
+          <Link href="/">
             <Logo />
           </Link>
           <div className="hidden items-center gap-7 text-sm text-ink-soft md:flex">
