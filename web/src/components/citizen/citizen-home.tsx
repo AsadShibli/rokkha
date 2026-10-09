@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, ChevronRight, Info, MessageSquareWarning, Radio } from "lucide-react";
+import { ArrowRight, ChevronRight, FileText, Info, MessageSquareWarning, Radio } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -106,6 +106,20 @@ function Home({ firstName }: { firstName: string }) {
           <span className="flex-1">
             <span className="block font-semibold">{t.citizen.report}</span>
             <span className="mt-0.5 block text-sm text-muted">{t.citizen.reportBody}</span>
+          </span>
+          <ChevronRight className="h-5 w-5 text-muted" />
+        </Link>
+
+        <Link
+          href="/citizen/gd"
+          className="flex items-center gap-4 rounded-3xl border border-line bg-white p-5 transition hover:border-accent hover:shadow-card"
+        >
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-accent-soft text-accent-strong">
+            <FileText className="h-5 w-5" />
+          </span>
+          <span className="flex-1">
+            <span className="block font-semibold">{t.gd.navCard}</span>
+            <span className="mt-0.5 block text-sm text-muted">{t.gd.navCardBody}</span>
           </span>
           <ChevronRight className="h-5 w-5 text-muted" />
         </Link>
