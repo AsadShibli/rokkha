@@ -13,7 +13,10 @@ Phone = Annotated[
 
 
 class UserCreate(BaseModel):
-    """Public registration. Unknown fields such as `role` are ignored, never applied."""
+    """Account fields shared by registration, station admins and officers.
+
+    Unknown fields such as `role` are ignored, never applied.
+    """
 
     name: str = Field(min_length=2, max_length=100, examples=["Rahim Uddin"])
     phone: Phone
@@ -51,4 +54,13 @@ class UserOut(BaseModel):
     email: str | None
     role: UserRole
     is_active: bool
+    station_id: int | None
     created_at: datetime
+
+
+class UserBrief(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    phone: str

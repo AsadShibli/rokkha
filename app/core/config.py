@@ -1,6 +1,9 @@
 from functools import lru_cache
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+DEV_JWT_SECRET = "local-dev-secret-change-me-in-production-0123456789"
 
 
 class Settings(BaseSettings):
@@ -14,6 +17,17 @@ class Settings(BaseSettings):
     test_database_url: str = "postgresql+asyncpg://rokkha:rokkha@localhost:5433/rokkha_test"
 
     bcrypt_rounds: int = 12
+
+    jwt_secret: str = DEV_JWT_SECRET
+    jwt_algorithm: str = "HS256"
+    access_token_minutes: int = 15
+    refresh_token_days: int = 7
+
+    @model_validator(mode="after")
+    def real_secret_outside_local(self) -> "Settings":
+        if self.app_env not in {"local", "test"} and self.jwt_secret == DEV_JWT_SECRET:
+            raise ValueError("JWT_SECRET must be set outside local development")
+        return self
 
 
 @lru_cache
