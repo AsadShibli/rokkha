@@ -3,7 +3,16 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, status
 
-from app.api.deps import Citizen, CurrentUser, DbSession, OfficerUser, Publisher, StationAdmin
+from app.api.deps import (
+    Citizen,
+    CurrentUser,
+    DbSession,
+    OfficerUser,
+    Publisher,
+    Queue,
+    RateLimitedCitizen,
+    StationAdmin,
+)
 from app.models.enums import IncidentStatus, IncidentType
 from app.schemas.common import Page, PageParams, page_params
 from app.schemas.errors import ErrorResponse
@@ -36,10 +45,13 @@ TRANSITION = {409: {"model": ErrorResponse, "description": "Not allowed from cur
     responses={
         **AUTH_ERRORS,
         409: {"model": ErrorResponse, "description": "You already have an open SOS"},
+        429: {"model": ErrorResponse, "description": "Too many SOS; see Retry-After"},
     },
 )
-async def raise_sos(data: SosIn, citizen: Citizen, db: DbSession) -> IncidentDetail:
-    incident = await IncidentService(db).raise_sos(citizen, data)
+async def raise_sos(
+    data: SosIn, citizen: RateLimitedCitizen, db: DbSession, queue: Queue
+) -> IncidentDetail:
+    incident = await IncidentService(db, queue=queue).raise_sos(citizen, data)
     return IncidentDetail.from_incident(incident)
 
 
@@ -164,9 +176,14 @@ async def cancel(
     },
 )
 async def reassign(
-    incident_id: int, data: ReassignIn, admin: StationAdmin, db: DbSession, publisher: Publisher
+    incident_id: int,
+    data: ReassignIn,
+    admin: StationAdmin,
+    db: DbSession,
+    publisher: Publisher,
+    queue: Queue,
 ) -> IncidentDetail:
-    incident = await IncidentService(db, publisher).reassign(
+    incident = await IncidentService(db, publisher, queue).reassign(
         admin, incident_id, data.officer_id, data.note
     )
     return IncidentDetail.from_incident(incident)

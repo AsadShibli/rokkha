@@ -21,6 +21,7 @@ from app.schemas.common import PageParams
 from app.schemas.incident import IncidentOut, ReportIn, SosIn
 from app.services.dispatch_service import DispatchService, record, release
 from app.services.realtime import EventPublisher, NullPublisher
+from app.workers.queue import JobQueue, NullJobQueue
 
 # Which statuses each action may start from (BR Lifecycle 2). Anything else -> 409.
 CAN_ACCEPT = {IncidentStatus.ASSIGNED}
@@ -35,9 +36,15 @@ def ensure_status(incident: Incident, allowed: set[IncidentStatus]) -> None:
 
 
 class IncidentService:
-    def __init__(self, session: AsyncSession, publisher: EventPublisher | None = None):
+    def __init__(
+        self,
+        session: AsyncSession,
+        publisher: EventPublisher | None = None,
+        queue: JobQueue | None = None,
+    ):
         self.session = session
         self.publisher = publisher or NullPublisher()
+        self.queue = queue or NullJobQueue()
         self.incidents = IncidentRepository(session)
         self.stations = StationRepository(session)
         self.officers = OfficerRepository(session)
@@ -58,8 +65,10 @@ class IncidentService:
         # INSERT now: a racing second SOS from the same citizen fails here on the partial
         # unique index (-> 409 ACTIVE_SOS_EXISTS) before any officer gets locked.
         await flush_or_conflict(self.session)
-        await self.dispatch.assign_nearest(incident)
+        officer = await self.dispatch.assign_nearest(incident)
         await commit_or_conflict(self.session)
+        if officer is not None:
+            await self.queue.schedule_escalation(incident.id, officer.id)
         return incident
 
     async def file_report(self, citizen: User, data: ReportIn) -> Incident:
@@ -156,6 +165,8 @@ class IncidentService:
         self.dispatch.assign(incident, target, actor_id=admin.id, note=note)
         await commit_or_conflict(self.session)
         await self.publish_status(incident)
+        if incident.type == IncidentType.SOS:
+            await self.queue.schedule_escalation(incident.id, target.id)
         return incident
 
     # --- helpers -------------------------------------------------------------------------

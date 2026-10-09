@@ -97,6 +97,16 @@ class NoStationError(AppError):
     message = "No station is configured to take this incident."
 
 
+class RateLimitedError(AppError):
+    status_code = status.HTTP_429_TOO_MANY_REQUESTS
+    code = "RATE_LIMITED"
+    message = "Too many SOS requests. Please wait before trying again."
+
+    def __init__(self, retry_after: int):
+        super().__init__()
+        self.headers = {"Retry-After": str(retry_after)}
+
+
 class OfficerBusyError(AppError):
     status_code = status.HTTP_409_CONFLICT
     code = "OFFICER_BUSY"

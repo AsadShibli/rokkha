@@ -3,9 +3,10 @@ from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.enums import DutyStatus, IncidentStatus
+from app.models.enums import DutyStatus, IncidentStatus, IncidentType
 from app.models.incident import Incident, IncidentEvent
 from app.models.officer import Officer
+from app.repositories.incident_repository import IncidentRepository
 from app.repositories.officer_repository import OfficerRepository
 
 
@@ -41,6 +42,7 @@ class DispatchService:
     def __init__(self, session: AsyncSession):
         self.session = session
         self.officers = OfficerRepository(session)
+        self.incidents = IncidentRepository(session)
 
     def assign(
         self,
@@ -69,3 +71,30 @@ class DispatchService:
         if officer is not None:
             self.assign(incident, officer, actor_id=None, note=note)
         return officer
+
+    async def escalate(self, incident_id: int, officer_id: int) -> Incident | None:
+        """SOS still not accepted by `officer_id`: hand it to the next-nearest officer.
+
+        Returns None (nothing to do) if, meanwhile, the officer accepted, the citizen
+        cancelled, or the incident was reassigned. Otherwise the officer is freed and the
+        SOS goes to the nearest reachable officer who hasn't had it yet, or back to pending.
+        """
+        incident = await self.incidents.get_for_update(incident_id)
+        if (
+            incident is None
+            or incident.type != IncidentType.SOS
+            or incident.status != IncidentStatus.ASSIGNED
+            or incident.officer_id != officer_id
+        ):
+            return None
+        release(incident.officer)
+        # Never re-offer the SOS to anyone who already had it (no ping-pong between two
+        # officers); when everyone nearby has timed out it waits for the station admin.
+        tried = {e.officer_id for e in incident.events if e.officer_id is not None}
+        note = "Escalated: not accepted within the time limit"
+        if await self.assign_nearest(incident, exclude_ids=sorted(tried), note=note) is None:
+            incident.officer = None
+            incident.assigned_at = None
+            record(incident, IncidentStatus.PENDING, None, note=f"{note}; no other officer free")
+        await self.session.commit()
+        return incident

@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     # An available officer counts as reachable only if seen this recently (BR Officers 8).
     officer_reachable_minutes: int = 10
 
+    # BR Incidents-creation 8 and Lifecycle 11.
+    sos_rate_limit: int = 3
+    sos_rate_window_seconds: int = 600
+    sos_accept_timeout_seconds: int = 120
+
     @model_validator(mode="after")
     def real_secret_outside_local(self) -> "Settings":
         if self.app_env not in {"local", "test"} and self.jwt_secret == DEV_JWT_SECRET:
