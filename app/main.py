@@ -2,6 +2,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from redis.asyncio import Redis
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
@@ -11,8 +12,10 @@ from app.schemas.errors import ErrorResponse
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    app.state.redis = Redis.from_url(get_settings().redis_url, decode_responses=True)
     yield
+    await app.state.redis.aclose()
     await engine.dispose()
 
 

@@ -8,15 +8,18 @@ from app.db.errors import commit_or_conflict, taken
 from app.models.enums import DutyStatus, UserRole
 from app.models.officer import Officer
 from app.models.user import User
+from app.repositories.incident_repository import IncidentRepository
 from app.repositories.officer_repository import OfficerRepository
 from app.schemas.common import PageParams
 from app.schemas.officer import OfficerCreate
+from app.services.realtime import EventPublisher, NullPublisher
 from app.services.user_service import UserService
 
 
 class OfficerService:
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession, publisher: EventPublisher | None = None):
         self.session = session
+        self.publisher = publisher or NullPublisher()
         self.officers = OfficerRepository(session)
         self.accounts = UserService(session)
 
@@ -69,6 +72,18 @@ class OfficerService:
         officer.last_lng = lng
         officer.last_seen_at = datetime.now(UTC)
         await self.session.commit()
+        incident_id = await IncidentRepository(self.session).active_for_officer(officer.id)
+        if incident_id is not None:
+            await self.publisher.publish(
+                incident_id,
+                {
+                    "type": "location",
+                    "incident_id": incident_id,
+                    "officer_id": officer.id,
+                    "lat": lat,
+                    "lng": lng,
+                },
+            )
 
     async def own_profile(self, user: User) -> Officer:
         return await self._own_profile(user)

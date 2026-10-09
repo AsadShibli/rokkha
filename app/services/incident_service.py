@@ -18,8 +18,9 @@ from app.repositories.incident_repository import IncidentRepository, visibility
 from app.repositories.officer_repository import OfficerRepository, is_reachable
 from app.repositories.station_repository import StationRepository
 from app.schemas.common import PageParams
-from app.schemas.incident import ReportIn, SosIn
+from app.schemas.incident import IncidentOut, ReportIn, SosIn
 from app.services.dispatch_service import DispatchService, record, release
+from app.services.realtime import EventPublisher, NullPublisher
 
 # Which statuses each action may start from (BR Lifecycle 2). Anything else -> 409.
 CAN_ACCEPT = {IncidentStatus.ASSIGNED}
@@ -34,8 +35,9 @@ def ensure_status(incident: Incident, allowed: set[IncidentStatus]) -> None:
 
 
 class IncidentService:
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession, publisher: EventPublisher | None = None):
         self.session = session
+        self.publisher = publisher or NullPublisher()
         self.incidents = IncidentRepository(session)
         self.stations = StationRepository(session)
         self.officers = OfficerRepository(session)
@@ -109,6 +111,7 @@ class IncidentService:
         incident.accepted_at = datetime.now(UTC)
         record(incident, IncidentStatus.EN_ROUTE, user.id, note=note)
         await commit_or_conflict(self.session)
+        await self.publish_status(incident)
         return incident
 
     async def resolve(self, user: User, incident_id: int, note: str | None) -> Incident:
@@ -119,6 +122,7 @@ class IncidentService:
         record(incident, IncidentStatus.RESOLVED, user.id, note=note)
         release(incident.officer)
         await commit_or_conflict(self.session)
+        await self.publish_status(incident)
         return incident
 
     async def cancel(self, citizen: User, incident_id: int, note: str | None) -> Incident:
@@ -131,6 +135,7 @@ class IncidentService:
         record(incident, IncidentStatus.CANCELLED, citizen.id, note=note)
         release(incident.officer)
         await commit_or_conflict(self.session)
+        await self.publish_status(incident)
         return incident
 
     async def reassign(
@@ -150,9 +155,15 @@ class IncidentService:
         release(incident.officer)
         self.dispatch.assign(incident, target, actor_id=admin.id, note=note)
         await commit_or_conflict(self.session)
+        await self.publish_status(incident)
         return incident
 
     # --- helpers -------------------------------------------------------------------------
+
+    async def publish_status(self, incident: Incident) -> None:
+        """Push the new state to live subscribers (after commit, so it's real)."""
+        payload = IncidentOut.from_incident(incident).model_dump(mode="json")
+        await self.publisher.publish(incident.id, {"type": "status", "incident": payload})
 
     async def _locked_for_officer(self, user: User, incident_id: int) -> Incident:
         officer_id = await self._officer_id(user)

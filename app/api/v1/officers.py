@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, status
 
-from app.api.deps import AnyAdmin, DbSession, OfficerUser, StationAdmin
+from app.api.deps import AnyAdmin, DbSession, OfficerUser, Publisher, StationAdmin
 from app.models.enums import DutyStatus
 from app.schemas.common import Page, PageParams, page_params
 from app.schemas.errors import ErrorResponse
@@ -76,5 +76,7 @@ async def set_my_status(data: OfficerStatusIn, user: OfficerUser, db: DbSession)
     summary="Send current location (officer)",
     responses=ERRORS,
 )
-async def update_my_location(data: LocationIn, user: OfficerUser, db: DbSession) -> None:
-    await OfficerService(db).update_location(user, data.lat, data.lng)
+async def update_my_location(
+    data: LocationIn, user: OfficerUser, db: DbSession, publisher: Publisher
+) -> None:
+    await OfficerService(db, publisher).update_location(user, data.lat, data.lng)

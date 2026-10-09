@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, status
 
-from app.api.deps import Citizen, CurrentUser, DbSession, OfficerUser, StationAdmin
+from app.api.deps import Citizen, CurrentUser, DbSession, OfficerUser, Publisher, StationAdmin
 from app.models.enums import IncidentStatus, IncidentType
 from app.schemas.common import Page, PageParams, page_params
 from app.schemas.errors import ErrorResponse
@@ -106,10 +106,14 @@ async def get_incident(incident_id: int, user: CurrentUser, db: DbSession) -> In
     responses={**AUTH_ERRORS, **NOT_FOUND, **TRANSITION},
 )
 async def accept(
-    incident_id: int, user: OfficerUser, db: DbSession, data: NoteIn | None = None
+    incident_id: int,
+    user: OfficerUser,
+    db: DbSession,
+    publisher: Publisher,
+    data: NoteIn | None = None,
 ) -> IncidentDetail:
     note = data.note if data else None
-    incident = await IncidentService(db).accept(user, incident_id, note)
+    incident = await IncidentService(db, publisher).accept(user, incident_id, note)
     return IncidentDetail.from_incident(incident)
 
 
@@ -120,10 +124,14 @@ async def accept(
     responses={**AUTH_ERRORS, **NOT_FOUND, **TRANSITION},
 )
 async def resolve(
-    incident_id: int, user: OfficerUser, db: DbSession, data: NoteIn | None = None
+    incident_id: int,
+    user: OfficerUser,
+    db: DbSession,
+    publisher: Publisher,
+    data: NoteIn | None = None,
 ) -> IncidentDetail:
     note = data.note if data else None
-    incident = await IncidentService(db).resolve(user, incident_id, note)
+    incident = await IncidentService(db, publisher).resolve(user, incident_id, note)
     return IncidentDetail.from_incident(incident)
 
 
@@ -134,10 +142,14 @@ async def resolve(
     responses={**AUTH_ERRORS, **NOT_FOUND, **TRANSITION},
 )
 async def cancel(
-    incident_id: int, citizen: Citizen, db: DbSession, data: NoteIn | None = None
+    incident_id: int,
+    citizen: Citizen,
+    db: DbSession,
+    publisher: Publisher,
+    data: NoteIn | None = None,
 ) -> IncidentDetail:
     note = data.note if data else None
-    incident = await IncidentService(db).cancel(citizen, incident_id, note)
+    incident = await IncidentService(db, publisher).cancel(citizen, incident_id, note)
     return IncidentDetail.from_incident(incident)
 
 
@@ -152,7 +164,9 @@ async def cancel(
     },
 )
 async def reassign(
-    incident_id: int, data: ReassignIn, admin: StationAdmin, db: DbSession
+    incident_id: int, data: ReassignIn, admin: StationAdmin, db: DbSession, publisher: Publisher
 ) -> IncidentDetail:
-    incident = await IncidentService(db).reassign(admin, incident_id, data.officer_id, data.note)
+    incident = await IncidentService(db, publisher).reassign(
+        admin, incident_id, data.officer_id, data.note
+    )
     return IncidentDetail.from_incident(incident)

@@ -134,7 +134,7 @@ then an audit against the Day-0 docs (flag anything INVENTED / ASSUMED).
 - [x] **Day 4 — Tue 13 Oct:** accept/resolve/cancel/reassign with transition table (409); global error handlers; role-scoped list with pagination + filters
 - [x] **Day 5 — Wed 14 Oct:** GD model, numbering, submit/review; /dashboard/stats; scripts/seed.py (3 thanas, 6 officers, 5 citizens)
 - [x] **Day 6 — Thu 15 Oct (MVP done):** pytest (auth, assignment incl. 2 concurrent SOS, invalid transitions, GD review); Dockerfile + compose; GitHub Actions
-- [ ] **Day 7 — Fri 16 Oct:** WebSocket with token auth; Redis pub/sub
+- [x] **Day 7 — Fri 16 Oct:** WebSocket with token auth; Redis pub/sub
 - [ ] **Day 8 — Sat 17 Oct:** ARQ escalation job; SOS rate limit (429)
 - [ ] **Day 9 — Sun 18 Oct:** /gds/ai-draft with strict JSON + timeout fallback; deploy (Render/Railway/Fly.io)
 - [ ] **Day 10 — Mon 19 Oct:** README, diagrams, Postman collection, demo video

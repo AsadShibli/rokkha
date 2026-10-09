@@ -44,6 +44,13 @@ class IncidentRepository:
         )
         return await self.session.scalar(stmt.limit(1)) is not None
 
+    async def active_for_officer(self, officer_id: int) -> int | None:
+        stmt = select(Incident.id).where(
+            Incident.officer_id == officer_id,
+            Incident.status.in_((IncidentStatus.ASSIGNED, IncidentStatus.EN_ROUTE)),
+        )
+        return await self.session.scalar(stmt)
+
     async def get_with_events(
         self, incident_id: int, scope: ColumnElement[bool] | None = None
     ) -> Incident | None:
