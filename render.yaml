@@ -21,8 +21,8 @@ services:
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
-      - key: ANTHROPIC_API_KEY
-        sync: false # optional; leave empty to disable /gds/ai-draft
+      - key: GROQ_API_KEY
+        sync: false # free key from console.groq.com; enables /gds/ai-draft
 
   - type: keyvalue
     name: rokkha-redis

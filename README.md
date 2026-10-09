@@ -27,7 +27,7 @@ humans for review.
 | **Escalation** | ARQ job: an SOS not accepted in 2 minutes goes to the next-nearest officer who hasn't had it, else back to pending |
 | **Live updates** | `WS /ws/incidents/{id}`: status changes and officer location, fanned out through Redis pub/sub so it works across workers |
 | **Online GD** | Numbers like `DHA-GUL-2026-000001` (per station, per year, no duplicates under concurrency); `submitted → under_review → approved/rejected` |
-| **AI draft** | `POST /gds/ai-draft` turns a Bangla or English complaint into a suggested GD (Claude, structured output), validated and never saved |
+| **AI draft** | `POST /gds/ai-draft` turns a Bangla or English complaint into a suggested GD (Groq free tier or Anthropic, JSON output), validated and never saved |
 | **Ops** | Dashboard stats, SOS rate limit (429), health checks, consistent error JSON, Docker, CI |
 
 ## Quick start
@@ -71,7 +71,7 @@ flowchart LR
     API <-- "pub/sub · rate limits · job queue" --> RD[("Redis")]
     W["ARQ worker<br/>SOS escalation"] <--> RD
     W --> PG
-    API -- "GD draft" --> AI["Claude API"]
+    API -- "GD draft" --> AI["LLM API (Groq / Anthropic)"]
 ```
 
 - **Routers** only parse input, pick the role guard, call one service method and shape the response.

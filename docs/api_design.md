@@ -494,8 +494,8 @@ pagination.
 
 **Who:** citizen. **Input:** `text` (Bangla or English, ≤ 2000).
 
-**Must do:** ask Claude for strict JSON `{category, title, details, incident_date|null}`
-(JSON-schema structured output), validate it with the same field rules as `POST /gds`, drop a
+**Must do:** ask the configured LLM (Groq free tier by default, or Anthropic) for strict JSON `{category, title, details, incident_date|null}`
+(JSON mode / JSON-schema output), validate it with the same field rules as `POST /gds`, drop a
 future date, fail fast (no retries, ~20 s timeout), and limit each citizen to 10 drafts per hour
 (`429 RATE_LIMITED`).
 
