@@ -130,7 +130,7 @@ Every rule here should map to a service check, a DB constraint, or a test. Rules
 
 1. List endpoints accept `page` (default 1) and `page_size` (default 20, max 100) and return
    `{ "items", "total", "page", "page_size" }`.
-2. Lists are newest first and filterable by `status`, `station_id` (admins only) and a
+2. Lists are newest first (stations: alphabetical by name, for picking one) and filterable by `status`, `station_id` (admins only) and a
    `from`/`to` date range.
 3. All errors use one shape: `{"error": {"code", "message", "details"}}`; `details` is only
    filled for validation errors.

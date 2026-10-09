@@ -186,7 +186,7 @@ Responses reuse these shapes so each endpoint below only names them.
 
 **Who:** any authenticated user (citizens need it to choose a station for a GD)
 
-**Input (query):** `city` (optional), pagination.
+**Input (query):** `city` (optional, case-insensitive), pagination. Sorted by name.
 
 **Response:** `200` + paginated Station.
 
