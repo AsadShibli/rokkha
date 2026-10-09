@@ -137,7 +137,7 @@ then an audit against the Day-0 docs (flag anything INVENTED / ASSUMED).
 - [x] **Day 7 — Fri 16 Oct:** WebSocket with token auth; Redis pub/sub
 - [x] **Day 8 — Sat 17 Oct:** ARQ escalation job; SOS rate limit (429)
 - [x] **Day 9 — Sun 18 Oct:** /gds/ai-draft with strict JSON + timeout fallback; deploy (Render/Railway/Fly.io)
-- [ ] **Day 10 — Mon 19 Oct:** README, diagrams, Postman collection, demo video
+- [x] **Day 10 — Mon 19 Oct:** README, diagrams, Postman collection (remaining: demo video, live deploy, pin repo)
 
 ## README outline
 1. Pitch + problem (slow manual dispatch, paper GDs)
