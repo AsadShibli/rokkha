@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     run_worker_in_process: bool = False
 
     # AI GD draft (optional: without a key the endpoint answers 503 AI_UNAVAILABLE).
+    ai_provider: str = "auto"  # auto | groq | anthropic
+    groq_api_key: str | None = None
+    groq_model: str = "llama-3.3-70b-versatile"
     anthropic_api_key: str | None = None
     ai_model: str = "claude-opus-5-5"
     ai_timeout_seconds: float = 20.0

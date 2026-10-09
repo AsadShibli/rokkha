@@ -11,8 +11,10 @@ The same image runs the ARQ worker with `arq app.workers.main.WorkerSettings`.
 | `REDIS_URL` | yes | pub/sub for WebSockets, the job queue, rate limits |
 | `JWT_SECRET` | yes | any long random string; startup fails if it's the dev default outside `APP_ENV=local` |
 | `APP_ENV` | yes | e.g. `production` |
-| `ANTHROPIC_API_KEY` | no | enables `POST /gds/ai-draft`; without it that endpoint returns 503 `AI_UNAVAILABLE` |
-| `AI_MODEL` | no | defaults to `claude-opus-5-5` |
+| `GROQ_API_KEY` | no | free key from console.groq.com; enables `POST /gds/ai-draft` (without any AI key it returns 503 `AI_UNAVAILABLE`) |
+| `GROQ_MODEL` | no | defaults to `llama-3.3-70b-versatile` |
+| `AI_PROVIDER` | no | `auto` (default: Groq if its key is set, else Anthropic), `groq` or `anthropic` |
+| `ANTHROPIC_API_KEY`, `AI_MODEL` | no | alternative provider (paid); model defaults to `claude-opus-5-5` |
 | `SOS_ACCEPT_TIMEOUT_SECONDS` | no | escalation delay, default 120 |
 | `RUN_WORKER_IN_PROCESS` | no | `true` runs the escalation worker inside the API (single-service hosting) |
 
