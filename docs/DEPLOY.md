@@ -12,7 +12,8 @@ The same image runs the ARQ worker with `arq app.workers.main.WorkerSettings`.
 | `JWT_SECRET` | yes | any long random string; startup fails if it's the dev default outside `APP_ENV=local` |
 | `APP_ENV` | yes | e.g. `production` |
 | `GROQ_API_KEY` | no | free key from console.groq.com; enables `POST /gds/ai-draft` (without any AI key it returns 503 `AI_UNAVAILABLE`) |
-| `GROQ_MODEL` | no | defaults to `llama-3.3-70b-versatile` |
+| `GROQ_MODEL` | no | defaults to `openai/gpt-oss-120b` (free tier) |
+| `SEED_DEMO_DATA` | no | `true` loads demo data on startup if missing and marks seeded on-duty officers as seen (handy on free hosting, which has no shell) |
 | `AI_PROVIDER` | no | `auto` (default: Groq if its key is set, else Anthropic), `groq` or `anthropic` |
 | `ANTHROPIC_API_KEY`, `AI_MODEL` | no | alternative provider (paid); model defaults to `claude-opus-5-5` |
 | `SOS_ACCEPT_TIMEOUT_SECONDS` | no | escalation delay, default 120 |
@@ -33,7 +34,8 @@ The same image runs the ARQ worker with `arq app.workers.main.WorkerSettings`.
    It reads [`render.yaml`](../render.yaml) and creates `rokkha-api` + `rokkha-redis`.
    When asked, paste the Neon string as `DATABASE_URL` (and optionally `ANTHROPIC_API_KEY`).
 3. First deploy builds the image (a few minutes). Migrations run on start.
-4. Seed from your machine against Neon:
+4. Seed: set `SEED_DEMO_DATA=true` on the service (it seeds on the next start), or from your
+   machine against Neon:
    `DATABASE_URL="<neon string>" uv run python -m scripts.seed`
    (PowerShell: `$env:DATABASE_URL="<neon string>"; uv run python -m scripts.seed`)
 5. Swagger: `https://rokkha-api.onrender.com/docs` (or the name Render assigned).

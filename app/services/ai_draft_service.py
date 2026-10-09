@@ -106,10 +106,12 @@ class GroqProvider:
         )
 
     async def complete(self, text: str) -> str:
+        options = {"reasoning_effort": "low"} if self.model.startswith("openai/gpt-oss") else {}
         try:
             response = await self.http.post(
                 "/chat/completions",
                 json={
+                    **options,
                     "model": self.model,
                     "messages": [
                         {"role": "system", "content": SYSTEM_PROMPT},
