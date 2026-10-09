@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, FileSearch, Loader2, X } from "lucide-react";
 import { useState } from "react";
 
+import { AdminNav } from "@/components/admin/admin-nav";
 import { AppShell } from "@/components/app/app-shell";
 import { GdStatusBadge } from "@/components/gd/gd-status";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,16 @@ import { cn } from "@/lib/utils";
 const TABS: GdStatus[] = ["submitted", "under_review", "approved", "rejected"];
 
 export function GdReview() {
-  return <AppShell roles={["station_admin", "super_admin"]}>{(user) => <Queue user={user} />}</AppShell>;
+  return (
+    <AppShell roles={["station_admin", "super_admin"]}>
+      {(user) => (
+        <>
+          <AdminNav role={user.role} />
+          <Queue user={user} />
+        </>
+      )}
+    </AppShell>
+  );
 }
 
 function Queue({ user }: { user: User }) {

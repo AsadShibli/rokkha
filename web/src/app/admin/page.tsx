@@ -1,5 +1,5 @@
-import { RoleHome } from "@/components/app/role-home";
+import { AdminOverview } from "@/components/admin/overview";
 
-export default function AdminHome() {
-  return <RoleHome roles={["station_admin", "super_admin"]} />;
+export default function AdminPage() {
+  return <AdminOverview />;
 }
