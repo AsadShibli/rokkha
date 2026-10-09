@@ -34,11 +34,14 @@ class Settings(BaseSettings):
     sos_accept_timeout_seconds: int = 120
     # Run the ARQ worker inside the API process (single-service free hosting).
     run_worker_in_process: bool = False
+    # Load demo data on startup if missing, and mark seeded on-duty officers as seen
+    # (free hosting has no shell to run scripts/seed.py).
+    seed_demo_data: bool = False
 
     # AI GD draft (optional: without a key the endpoint answers 503 AI_UNAVAILABLE).
     ai_provider: str = "auto"  # auto | groq | anthropic
     groq_api_key: str | None = None
-    groq_model: str = "llama-3.3-70b-versatile"
+    groq_model: str = "openai/gpt-oss-120b"  # Llama models moved to Groq Enterprise
     anthropic_api_key: str | None = None
     ai_model: str = "claude-opus-5-5"
     ai_timeout_seconds: float = 20.0

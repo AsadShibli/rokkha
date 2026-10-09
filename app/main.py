@@ -26,6 +26,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     redis_url = settings.redis_url
     app.state.ai = build_provider(settings)
+    if settings.seed_demo_data:
+        from scripts.seed import seed, touch
+
+        await seed()
+        await touch()
     app.state.redis = Redis.from_url(redis_url, decode_responses=True)
     app.state.arq = await create_pool(RedisSettings.from_dsn(redis_url))
     worker, worker_task = None, None

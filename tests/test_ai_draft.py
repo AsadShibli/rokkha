@@ -44,7 +44,7 @@ def groq(handler) -> tuple[GroqProvider, list[httpx.Request]]:
         seen.append(request)
         return handler(request)
 
-    provider = GroqProvider("gsk_test", "llama-3.3-70b-versatile", 5.0, httpx.MockTransport(record))
+    provider = GroqProvider("gsk_test", "openai/gpt-oss-120b", 5.0, httpx.MockTransport(record))
     return provider, seen
 
 
@@ -64,7 +64,8 @@ async def test_groq_returns_validated_draft(client: AsyncClient, db_session: Asy
     assert seen[0].url.path == "/openai/v1/chat/completions"
     assert seen[0].headers["authorization"] == "Bearer gsk_test"
     assert sent["response_format"] == {"type": "json_object"}
-    assert sent["model"] == "llama-3.3-70b-versatile"
+    assert sent["model"] == "openai/gpt-oss-120b"
+    assert sent["reasoning_effort"] == "low"
     assert "Zindabazar" in sent["messages"][1]["content"]
     assert f"Today is {local_today().isoformat()}" in sent["messages"][1]["content"]
 
