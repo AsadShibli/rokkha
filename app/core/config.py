@@ -1,4 +1,5 @@
 from functools import lru_cache
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -31,6 +32,8 @@ class Settings(BaseSettings):
     sos_rate_limit: int = 3
     sos_rate_window_seconds: int = 600
     sos_accept_timeout_seconds: int = 120
+    # Run the ARQ worker inside the API process (single-service free hosting).
+    run_worker_in_process: bool = False
 
     # AI GD draft (optional: without a key the endpoint answers 503 AI_UNAVAILABLE).
     anthropic_api_key: str | None = None
@@ -42,11 +45,16 @@ class Settings(BaseSettings):
     @field_validator("database_url", "test_database_url")
     @classmethod
     def use_asyncpg_driver(cls, url: str) -> str:
-        """Hosts (Render, Railway, Heroku) hand out postgres:// URLs; we need asyncpg."""
+        """Hosts hand out libpq URLs (postgres://...?sslmode=require); convert for asyncpg."""
         for prefix in ("postgres://", "postgresql://"):
             if url.startswith(prefix):
-                return "postgresql+asyncpg://" + url.removeprefix(prefix)
-        return url
+                url = "postgresql+asyncpg://" + url.removeprefix(prefix)
+        parts = urlsplit(url)
+        query = dict(parse_qsl(parts.query))
+        if "sslmode" in query:  # libpq name -> asyncpg name
+            query["ssl"] = query.pop("sslmode")
+        query.pop("channel_binding", None)  # libpq-only option (Neon adds it)
+        return urlunsplit(parts._replace(query=urlencode(query)))
 
     @model_validator(mode="after")
     def real_secret_outside_local(self) -> "Settings":
