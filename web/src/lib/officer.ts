@@ -48,8 +48,9 @@ const KEEPALIVE_MS = 30_000; // standing still: re-send so the officer stays "re
  * 10 s), and every 30 s while standing still, which keeps the officer inside the 10-minute
  * "reachable" window.
  *
- * Without a usable Bangladeshi fix (blocked, no signal, or a reviewer abroad) it keeps the last
- * known position fresh instead, and `geo.status` says why, so the screen can tell the officer.
+ * Without a usable Bangladeshi fix (blocked, no signal, or a reviewer abroad) it shares the spot
+ * the officer set on the map, or else keeps the last known position fresh, and `geo.status` says
+ * which, so the screen can tell the officer.
  */
 export function useLocationSharing(enabled: boolean, lastLat: number | null, lastLng: number | null) {
   const geo = useGeolocation(enabled);
@@ -75,17 +76,17 @@ export function useLocationSharing(enabled: boolean, lastLat: number | null, las
     }
   }, []);
 
-  // A fresh device fix: send if we moved 25 m or 10 s have passed.
+  // A fresh device fix (or a newly set map spot): send if we moved 25 m or 10 s have passed.
   useEffect(() => {
-    if (!enabled || geo.status !== "ready") return;
+    if (!enabled || (geo.status !== "ready" && geo.status !== "manual")) return;
     const prev = sentRef.current;
     if (!prev || Date.now() - prev.at >= SEND_EVERY_MS || distanceKm(prev.point, geo.point) > MOVED_KM) {
       void send(geo.point);
     }
   }, [enabled, geo, send]);
 
-  // No usable fix (blocked / no signal / abroad): keep the last known position fresh at once.
-  const noFix = geo.status !== "ready" && geo.status !== "locating";
+  // No usable fix or map spot (blocked / no signal / abroad): keep the last known position fresh.
+  const noFix = geo.status !== "ready" && geo.status !== "manual" && geo.status !== "locating";
   useEffect(() => {
     if (enabled && noFix && !sentRef.current) void send(fallback.current);
   }, [enabled, noFix, send]);
@@ -95,7 +96,7 @@ export function useLocationSharing(enabled: boolean, lastLat: number | null, las
     if (!enabled) return;
     const id = setInterval(() => {
       const g = geoRef.current;
-      void send(g.status === "ready" ? g.point : fallback.current);
+      void send(g.status === "ready" || g.status === "manual" ? g.point : fallback.current);
     }, KEEPALIVE_MS);
     return () => clearInterval(id);
   }, [enabled, send]);

@@ -69,17 +69,24 @@ export function IncidentMap({
   className,
   zoom = 14,
   follow = false,
+  onPick,
 }: {
   pins: MapPin[];
   className?: string;
   zoom?: number;
   /** Keep the first pin centred as it moves (your own live position). */
   follow?: boolean;
+  /** Called with the tapped spot; the map shows a crosshair cursor while this is set. */
+  onPick?: (point: { lat: number; lng: number }) => void;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState<{ lib: MapLibre; map: MapLibreMap } | null>(null);
   const markers = useRef(new Map<string, Marker>());
   const fitted = useRef(false);
+  const pick = useRef(onPick);
+  useEffect(() => {
+    pick.current = onPick;
+  }, [onPick]);
 
   // Create the map once; MapLibre needs the browser, so it's loaded lazily.
   useEffect(() => {
@@ -96,6 +103,7 @@ export function IncidentMap({
         attributionControl: { compact: true },
       });
       created.addControl(new lib.NavigationControl({ showCompass: false }), "top-right");
+      created.on("click", (e) => pick.current?.({ lat: e.lngLat.lat, lng: e.lngLat.lng }));
       setReady({ lib, map: created });
     });
     return () => {
@@ -123,5 +131,10 @@ export function IncidentMap({
     }
   }, [ready, pins, follow]);
 
-  return <div ref={container} className={cn("h-full w-full bg-[#f6f1ea]", className)} />;
+  return (
+    <div
+      ref={container}
+      className={cn("h-full w-full bg-[#f6f1ea]", onPick && "[&_canvas]:!cursor-crosshair", className)}
+    />
+  );
 }

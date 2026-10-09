@@ -145,7 +145,11 @@ function DutyCard({
             }
             footer={
               <p className="mt-1.5 text-xs font-medium text-ink-soft">
-                {sharing.demo ? t.location.keepingFresh : t.location.sharingLive}
+                {sharing.demo
+                  ? t.location.keepingFresh
+                  : sharing.geo.status === "manual"
+                    ? t.location.sharingManual
+                    : t.location.sharingLive}
                 {sharing.lastSent &&
                   ` · ${t.location.lastSent.replace("{t}", formatTime(sharing.lastSent.at.toISOString(), locale))}`}
               </p>
