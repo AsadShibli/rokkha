@@ -1,6 +1,7 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
+import anthropic
 from arq import create_pool
 from arq.connections import RedisSettings
 from fastapi import FastAPI
@@ -15,11 +16,23 @@ from app.schemas.errors import ErrorResponse
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    redis_url = get_settings().redis_url
+    settings = get_settings()
+    redis_url = settings.redis_url
+    app.state.ai = (
+        anthropic.AsyncAnthropic(
+            api_key=settings.anthropic_api_key,
+            timeout=settings.ai_timeout_seconds,
+            max_retries=0,  # the citizen is waiting; fail fast and let them type instead
+        )
+        if settings.anthropic_api_key
+        else None
+    )
     app.state.redis = Redis.from_url(redis_url, decode_responses=True)
     app.state.arq = await create_pool(RedisSettings.from_dsn(redis_url))
     yield
     await app.state.arq.aclose()
+    if app.state.ai is not None:
+        await app.state.ai.close()
     await app.state.redis.aclose()
     await engine.dispose()
 

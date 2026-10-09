@@ -136,7 +136,7 @@ then an audit against the Day-0 docs (flag anything INVENTED / ASSUMED).
 - [x] **Day 6 — Thu 15 Oct (MVP done):** pytest (auth, assignment incl. 2 concurrent SOS, invalid transitions, GD review); Dockerfile + compose; GitHub Actions
 - [x] **Day 7 — Fri 16 Oct:** WebSocket with token auth; Redis pub/sub
 - [x] **Day 8 — Sat 17 Oct:** ARQ escalation job; SOS rate limit (429)
-- [ ] **Day 9 — Sun 18 Oct:** /gds/ai-draft with strict JSON + timeout fallback; deploy (Render/Railway/Fly.io)
+- [x] **Day 9 — Sun 18 Oct:** /gds/ai-draft with strict JSON + timeout fallback; deploy (Render/Railway/Fly.io)
 - [ ] **Day 10 — Mon 19 Oct:** README, diagrams, Postman collection, demo video
 
 ## README outline

@@ -83,6 +83,10 @@ def redis_available() -> bool:
 def live() -> Iterator[tuple[TestClient, async_sessionmaker[AsyncSession]]]:
     if not redis_available():
         pytest.skip("Redis not reachable (docker compose up -d redis)")
+    # User ids restart after each TRUNCATE, so stale rate-limit counters would carry over.
+    sync_redis = redis.Redis.from_url(get_settings().redis_url)
+    for key in sync_redis.scan_iter("rate:*"):
+        sync_redis.delete(key)
     engine = create_async_engine(TEST_DATABASE_URL, poolclass=NullPool)
     maker = async_sessionmaker(engine, expire_on_commit=False)
 
