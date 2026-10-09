@@ -15,6 +15,43 @@ The same image runs the ARQ worker with `arq app.workers.main.WorkerSettings`.
 | `AI_MODEL` | no | defaults to `claude-opus-5-5` |
 | `SOS_ACCEPT_TIMEOUT_SECONDS` | no | escalation delay, default 120 |
 
+## Railway (recommended: no sleep, quick deploys)
+
+Railway builds the Dockerfile from GitHub and runs the API, the worker, Postgres and Redis in
+one project. Railway sets `PORT`; the image already listens on it.
+
+1. Sign in at https://railway.com with GitHub.
+2. **New Project → Deploy from GitHub repo → `rokkha`.** This becomes the API service.
+3. In the project canvas: **+ New → Database → PostgreSQL**, then **+ New → Database → Redis**.
+4. API service → **Variables** (use the reference picker for the first two):
+
+   ```
+   DATABASE_URL=${{Postgres.DATABASE_URL}}
+   REDIS_URL=${{Redis.REDIS_URL}}
+   APP_ENV=production
+   JWT_SECRET=<output of: python -c "import secrets; print(secrets.token_urlsafe(48))">
+   ANTHROPIC_API_KEY=<optional>
+   ```
+
+5. API service → **Settings**: Networking → **Generate Domain**; Deploy → Healthcheck Path
+   `/api/v1/health`.
+6. Worker: **+ New → GitHub Repo → `rokkha`** again → Settings → **Custom Start Command**
+   `arq app.workers.main.WorkerSettings` (no domain, no healthcheck). Give it the same
+   `DATABASE_URL`, `REDIS_URL`, `APP_ENV`, and `JWT_SECRET=${{<api service name>.JWT_SECRET}}`.
+7. Seed from your machine against the database's public URL (Postgres service → Variables →
+   `DATABASE_PUBLIC_URL`):
+
+   ```bash
+   DATABASE_URL="<DATABASE_PUBLIC_URL>" uv run python -m scripts.seed
+   ```
+
+   PowerShell: `$env:DATABASE_URL="<DATABASE_PUBLIC_URL>"; uv run python -m scripts.seed`
+
+Swagger: `https://<generated-domain>/docs`.
+
+Why not Vercel: its Python functions are serverless and short-lived, so they can't hold
+WebSocket connections, run the ARQ worker, or keep a Redis subscription open.
+
 ## Render (Blueprint)
 
 1. Sign in to https://render.com with GitHub and allow access to the `rokkha` repo.
