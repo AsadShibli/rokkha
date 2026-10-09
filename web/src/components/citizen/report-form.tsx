@@ -36,7 +36,7 @@ function ReportForm() {
     setError(null);
     try {
       const where = await resolvePoint();
-      if (where.source !== "device") setNotice(t.location.usedDemo[where.source]);
+      if (where.source !== "device" && where.source !== "manual") setNotice(t.location.usedDemo[where.source]);
       const incident = await api.post<IncidentDetail>("/incidents/report", {
         lat: where.lat,
         lng: where.lng,

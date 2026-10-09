@@ -41,7 +41,7 @@ function Home({ firstName }: { firstName: string }) {
     setNotice(t.citizen.locating);
     try {
       const where = await resolvePoint();
-      setNotice(where.source === "device" ? null : t.location.usedDemo[where.source]);
+      setNotice(where.source === "device" || where.source === "manual" ? null : t.location.usedDemo[where.source]);
       const incident = await api.post<IncidentDetail>("/incidents/sos", { lat: where.lat, lng: where.lng });
       queryClient.setQueryData(["incidents", "detail", incident.id], incident);
       void queryClient.invalidateQueries({ queryKey: ["incidents", "list"] });
