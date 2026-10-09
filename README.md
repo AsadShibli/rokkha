@@ -114,7 +114,7 @@ sequenceDiagram
     API->>API: rate limit (Redis), open-SOS check
     API->>DB: INSERT incident (pending) + event
     API->>DB: SELECT nearest reachable officer FOR UPDATE SKIP LOCKED
-    API->>DB: officer → busy, incident → assigned, event; COMMIT
+    API->>DB: officer → busy, incident → assigned, event, COMMIT
     API->>Redis: enqueue escalation check (+2 min)
     API-->>Citizen: 201 assigned + officer
     Citizen-->>API: WS /ws/incidents/{id}
