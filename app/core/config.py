@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import model_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEV_JWT_SECRET = "local-dev-secret-change-me-in-production-0123456789"
@@ -31,6 +31,22 @@ class Settings(BaseSettings):
     sos_rate_limit: int = 3
     sos_rate_window_seconds: int = 600
     sos_accept_timeout_seconds: int = 120
+
+    # AI GD draft (optional: without a key the endpoint answers 503 AI_UNAVAILABLE).
+    anthropic_api_key: str | None = None
+    ai_model: str = "claude-opus-5-5"
+    ai_timeout_seconds: float = 20.0
+    ai_draft_rate_limit: int = 10
+    ai_draft_rate_window_seconds: int = 3600
+
+    @field_validator("database_url", "test_database_url")
+    @classmethod
+    def use_asyncpg_driver(cls, url: str) -> str:
+        """Hosts (Render, Railway, Heroku) hand out postgres:// URLs; we need asyncpg."""
+        for prefix in ("postgres://", "postgresql://"):
+            if url.startswith(prefix):
+                return "postgresql+asyncpg://" + url.removeprefix(prefix)
+        return url
 
     @model_validator(mode="after")
     def real_secret_outside_local(self) -> "Settings":

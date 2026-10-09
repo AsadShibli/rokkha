@@ -101,3 +101,25 @@ async def limit_sos(
 
 
 RateLimitedCitizen = Annotated[User, Depends(limit_sos)]
+
+
+def get_ai_client(request: Request):
+    return getattr(request.app.state, "ai", None)
+
+
+async def limit_ai_draft(
+    citizen: Citizen, limiter: Annotated[RateLimiter, Depends(get_rate_limiter)]
+) -> User:
+    """Each draft costs money: cap it per citizen (429 with Retry-After)."""
+    settings = get_settings()
+    decision = await limiter.hit(
+        f"rate:ai-draft:{citizen.id}",
+        settings.ai_draft_rate_limit,
+        settings.ai_draft_rate_window_seconds,
+    )
+    if not decision.allowed:
+        raise RateLimitedError(decision.retry_after)
+    return citizen
+
+
+AiDraftCitizen = Annotated[User, Depends(limit_ai_draft)]

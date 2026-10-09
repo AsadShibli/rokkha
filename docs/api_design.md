@@ -494,8 +494,10 @@ pagination.
 
 **Who:** citizen. **Input:** `text` (Bangla or English, ≤ 2000).
 
-**Must do:** ask the LLM for strict JSON `{category, title, details, incident_date|null}`,
-validate it with the same Pydantic schema as `POST /gds`, and use a timeout of about 10 s.
+**Must do:** ask Claude for strict JSON `{category, title, details, incident_date|null}`
+(JSON-schema structured output), validate it with the same field rules as `POST /gds`, drop a
+future date, fail fast (no retries, ~20 s timeout), and limit each citizen to 10 drafts per hour
+(`429 RATE_LIMITED`).
 
 **Must NOT:** save anything, or return unvalidated model output.
 

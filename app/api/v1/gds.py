@@ -3,12 +3,20 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, status
 
-from app.api.deps import Citizen, DbSession, StationAdmin, require_role
+from app.api.deps import (
+    AiDraftCitizen,
+    Citizen,
+    DbSession,
+    StationAdmin,
+    get_ai_client,
+    require_role,
+)
 from app.models.enums import GdCategory, GdStatus, UserRole
 from app.models.user import User
 from app.schemas.common import Page, PageParams, page_params
 from app.schemas.errors import ErrorResponse
 from app.schemas.gd import GdCreate, GdOut, GdReviewIn
+from app.services.ai_draft_service import GdDraftIn, GdDraftOut, GdDraftService
 from app.services.gd_service import GdService
 
 router = APIRouter(prefix="/gds", tags=["online GD"])
@@ -34,6 +42,20 @@ NOT_FOUND = {404: {"model": ErrorResponse, "description": "Not found or not your
 )
 async def file_gd(data: GdCreate, citizen: Citizen, db: DbSession) -> GdOut:
     return GdOut.model_validate(await GdService(db).file(citizen, data))
+
+
+@router.post(
+    "/ai-draft",
+    response_model=GdDraftOut,
+    summary="Suggest a GD draft from free text (Bangla or English); nothing is saved",
+    responses={
+        **AUTH_ERRORS,
+        429: {"model": ErrorResponse, "description": "Too many drafts; see Retry-After"},
+        503: {"model": ErrorResponse, "description": "AI unavailable; fill the form manually"},
+    },
+)
+async def ai_draft(data: GdDraftIn, _: AiDraftCitizen, ai=Depends(get_ai_client)) -> GdDraftOut:
+    return await GdDraftService(ai).draft(data.text)
 
 
 @router.get(

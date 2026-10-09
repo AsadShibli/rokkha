@@ -100,11 +100,17 @@ class NoStationError(AppError):
 class RateLimitedError(AppError):
     status_code = status.HTTP_429_TOO_MANY_REQUESTS
     code = "RATE_LIMITED"
-    message = "Too many SOS requests. Please wait before trying again."
+    message = "Too many requests. Please wait before trying again."
 
     def __init__(self, retry_after: int):
         super().__init__()
         self.headers = {"Retry-After": str(retry_after)}
+
+
+class AiUnavailableError(AppError):
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    code = "AI_UNAVAILABLE"
+    message = "AI drafting is unavailable right now; please fill in the form yourself."
 
 
 class OfficerBusyError(AppError):

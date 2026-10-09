@@ -1,0 +1,60 @@
+# Render Blueprint: New -> Blueprint -> pick this repo. Creates Postgres, Key Value (Redis),
+# the API and the escalation worker. See docs/DEPLOY.md.
+services:
+  - type: web
+    name: rokkha-api
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rokkha-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: rokkha-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ANTHROPIC_API_KEY
+        sync: false # set in the dashboard; leave empty to disable /gds/ai-draft
+
+  # Runs SOS auto-escalation. Background workers are a paid Render plan; without this
+  # service everything else works and escalation jobs simply wait in Redis.
+  - type: worker
+    name: rokkha-worker
+    runtime: docker
+    plan: starter
+    dockerCommand: arq app.workers.main.WorkerSettings
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rokkha-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: rokkha-redis
+          property: connectionString
+      - key: JWT_SECRET
+        fromService:
+          type: web
+          name: rokkha-api
+          envVarKey: JWT_SECRET
+
+  - type: keyvalue
+    name: rokkha-redis
+    plan: free
+    ipAllowList: [] # internal connections only
+
+databases:
+  - name: rokkha-db
+    plan: free
+    databaseName: rokkha
+    user: rokkha
